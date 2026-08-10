@@ -1,0 +1,23 @@
+{
+  "name": "@apishift/cli",
+  "version": "0.1.0",
+  "description": "APIShift CLI developer tool for automated API change detection and refactoring",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "apishift": "./bin/apishift.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x bin/apishift.js"
+  },
+  "dependencies": {
+    "@apishift/core": "workspace:*",
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.19",
+    "typescript": "^5.7.3"
+  }
+}
