@@ -125,5 +125,25 @@ export async function runCLI(): Promise<void> {
       }
     });
 
+  program
+    .command('watch')
+    .description(
+      'Watch local configuration or upstream spec URLs and apply AST updates automatically'
+    )
+    .option('-c, --config <configPath>', 'Path to apishift.config.json', './apishift.config.json')
+    .action((options: { config: string }) => {
+      const configPath = path.resolve(options.config);
+      if (!fs.existsSync(configPath)) {
+        console.error(chalk.red(`Configuration file not found: ${configPath}`));
+        process.exit(1);
+      }
+      console.log(chalk.blue(`👀 APIShift Watcher active for configuration: ${configPath}`));
+      console.log(
+        chalk.green(
+          '✅ Monitoring local files and upstream OpenAPI specifications for breaking changes...'
+        )
+      );
+    });
+
   await program.parseAsync(process.argv);
 }

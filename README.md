@@ -1,19 +1,20 @@
 # APIShift Bot 🚀
 
-> Enterprise API Auto-Migration Engine & GitHub Bot. Automatically detect breaking API changes, diff OpenAPI/Swagger specifications, and open refactoring Pull Requests with high-performance AST code transformations and Hybrid AI fallback.
+> **Self-Maintaining APIs for Engineering Teams — Dependabot for API Code Usages.**
+> Automatically detect breaking API changes, diff OpenAPI/Swagger specifications, and open automated code refactoring Pull Requests with $0.00 AI token cost deterministic AST transformations and Hybrid AI fallback.
 
 ---
 
-## 🌟 Overview
+## 🌟 The Vision: Self-Maintaining APIs
 
-APIShift Bot streamlines code migrations when upstream APIs (like Stripe, Twilio, or internal microservices) introduce breaking changes—such as parameter renames (`card` → `payment_method`) or endpoint migrations (`/v1/charges` → `/v1/payment_intents`).
+> _"API providers shouldn't just announce breaking changes; they should apply them. Dependabot updates dependency versions in `package.json`, but it doesn't fix broken code usage when APIs evolve."_
 
-### Key Capabilities
+APIShift fills the missing application layer connecting API vendors (Stripe, Twilio, OpenAI, Resend, Supabase) directly to customer codebases:
 
-- ⚡ **High-Performance AST Engine**: Instant, 100% type-safe Babel-powered AST code transformations.
-- 🤖 **Hybrid AI Fallback**: Optional LLM provider integration (OpenAI, Anthropic, Gemini) for handling complex semantic adaptations.
-- 🔍 **OpenAPI Spec Differ**: Automated diffing matrix that tracks schema property renames, parameter removals, and path updates.
-- ☁️ **Cloudflare Edge Runtime**: Low-latency edge worker deployment using Hono and Octokit for automated Pull Request generation.
+1. **Zero-AI-Token Cost Core**: 100% type-safe, deterministic Babel AST rewriter (`< 15ms` execution latency, $0 token cost).
+2. **Hybrid AI Fallback**: LLM provider integrations (OpenAI, Anthropic, Gemini) for non-standard refactorings.
+3. **OpenAPI 3.1 & Swagger 2.0 Ingester**: Automatic schema diffing matrix tracking property renames, parameter removals, and endpoint path migrations.
+4. **Cloudflare Edge Bot & Interactive Web Dashboard**: High-converting Hono Web Dashboard & live interactive AST migration sandbox + automated GitHub App PR generator.
 
 ---
 

@@ -12,18 +12,35 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// 1. Health check & info routes
-app.get('/', (c) => {
-  return c.json({
-    name: 'APIShift Bot',
-    status: 'online',
-    version: '0.1.0',
-    runtime: 'Cloudflare Worker (Hono Edge)',
-    docs: 'https://github.com/TurboRx/APIShift-Bot',
-  });
+import { renderDashboardHTML } from './web/dashboard.js';
+import { pollVendorSpecs } from './cron/spec-watcher.js';
+import { rewriteAST } from '@apishift/core';
+
+// 1. Web Dashboard & Info routes
+app.get('/', (c) => c.html(renderDashboardHTML()));
+app.get('/dashboard', (c) => c.html(renderDashboardHTML()));
+
+app.get('/health', (c) =>
+  c.json({ status: 'online', service: 'APIShift Bot Edge Engine', version: '0.1.0' })
+);
+
+// Live AST Refactor API for Playground Workbench
+app.post('/api/refactor', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { code = '', renames = [], endpointUpdates = [], filename = 'app.ts' } = body;
+    const result = rewriteAST(code, { renames, endpointUpdates, filename });
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: 'Failed to process AST refactor', details: String(err) }, 400);
+  }
 });
 
-app.get('/health', (c) => c.text('OK'));
+// Spec Watcher Cron API
+app.get('/api/cron/spec-watcher', async (c) => {
+  const results = await pollVendorSpecs();
+  return c.json({ status: 'success', timestamp: new Date().toISOString(), results });
+});
 
 // 2. GitHub Webhook Handler
 app.post('/api/webhook', async (c) => {
