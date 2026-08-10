@@ -2,7 +2,7 @@
   "name": "apishift-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Automated GitHub Bot that detects breaking API changes and opens auto-refactoring PRs without AI token cost",
+  "description": "Enterprise API Auto-Migration Engine & GitHub Bot (Deterministic AST Engine with Hybrid AI Fallback)",
   "scripts": {
     "build": "pnpm -r build",
     "test": "vitest run",

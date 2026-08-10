@@ -1,68 +1,74 @@
 # APIShift Bot 🚀
 
-> An automated, zero-AI-cost GitHub Bot that diffs OpenAPI/Swagger specs, identifies breaking API changes, and automatically submits refactoring Pull Requests using deterministic AST transformations.
+> Enterprise API Auto-Migration Engine & GitHub Bot. Automatically detect breaking API changes, diff OpenAPI/Swagger specifications, and open refactoring Pull Requests with high-performance AST code transformations and Hybrid AI fallback.
 
 ---
 
-## 🌟 Why APIShift Bot?
+## 🌟 Overview
 
-When third-party APIs (like Stripe, Twilio, or internal microservices) release breaking updates—such as parameter renames (`card` → `payment_method`) or endpoint migrations (`/v1/charges` → `/v1/payment_intents`)—developers must manually update codebases across teams.
+APIShift Bot streamlines code migrations when upstream APIs (like Stripe, Twilio, or internal microservices) introduce breaking changes—such as parameter renames (`card` → `payment_method`) or endpoint migrations (`/v1/charges` → `/v1/payment_intents`).
 
-Unlike LLM-based tools, **APIShift Bot** runs at **0 AI token cost**, executes in milliseconds at Cloudflare Worker edge nodes, and guarantees **100% deterministic, type-safe AST code transformations** using Babel.
+### Key Capabilities
+- ⚡ **High-Performance AST Engine**: Instant, 100% type-safe Babel-powered AST code transformations.
+- 🤖 **Hybrid AI Fallback**: Optional LLM provider integration (OpenAI, Anthropic, Gemini) for handling complex semantic adaptations.
+- 🔍 **OpenAPI Spec Differ**: Automated diffing matrix that tracks schema property renames, parameter removals, and path updates.
+- ☁️ **Cloudflare Edge Runtime**: Low-latency edge worker deployment using Hono and Octokit for automated Pull Request generation.
 
 ---
 
-## 🏗 System Architecture & Workflow
+## 🏗 Architecture & Migration Flow
 
 ```mermaid
 graph TD
-    A[OpenAPI Spec Update / Upstream Webhook] --> B[apps/bot Cloudflare Worker]
-    B --> C[X-Hub-Signature Verification]
+    A[OpenAPI Spec Update / Webhook] --> B[apps/bot Cloudflare Worker]
+    B --> C[HMAC Signature Verification]
     C --> D[packages/core Schema Differ]
-    D --> E[Diffing Matrix: Old vs New OpenAPI Specs]
-    E --> F[Generate Breaking Change Refactor Rules]
-    F --> G[packages/core Babel AST Rewriter]
-    G --> H[AST Transformation on Source Files]
-    H --> I[apps/bot Octokit Git Helper]
-    I --> J[Branch Creation & Automated PR Submission]
+    D --> E[Breaking Change Matrix Generation]
+    E --> F[packages/core Hybrid AST Engine]
+    F -->|Deterministic Transform| G[Babel AST Code Rewriter]
+    F -.->|Optional AI Fallback| H[LLM Provider OpenAI / Anthropic / Gemini]
+    G --> I[apps/bot Octokit Git Engine]
+    H --> I
+    I --> J[Automated Refactoring Pull Request]
 ```
 
 ---
 
-## 📁 Repository Structure
+## 📁 Repository Modules
 
 ```
 apishift/
-├── pnpm-workspace.yaml          # Monorepo workspace configuration
-├── package.json                 # Monorepo root package configuration
+├── pnpm-workspace.yaml          # Workspace module configuration
+├── package.json                 # Workspace root package configuration
 ├── LICENSE                      # MIT License
-├── README.md                    # Project documentation
+├── README.md                    # Platform documentation
 ├── packages/
-│   ├── core/                    # Core schema diffing & Babel AST engine
+│   ├── core/                    # Core schema differ & Hybrid AST engine
 │   │   ├── src/
-│   │   │   ├── index.ts         # Main exports
-│   │   │   ├── ingester/        # OpenAPI schema diffing logic
+│   │   │   ├── index.ts         # Engine exports
+│   │   │   ├── ingester/        # OpenAPI spec diffing engine
 │   │   │   │   └── schema-differ.ts
-│   │   │   ├── ast/             # Babel AST parser, traverse, & generator
-│   │   │   │   └── babel-rewriter.ts
-│   │   │   └── types/           # Shared TypeScript interfaces
+│   │   │   ├── ast/             # AST Babel rewriter & Hybrid AI engine
+│   │   │   │   ├── babel-rewriter.ts
+│   │   │   │   └── hybrid-ai-rewriter.ts
+│   │   │   └── types/           # Shared TypeScript types
 │   │   │       └── index.ts
 │   │   └── package.json
 │   └── cli/                     # Developer CLI (`apishift`)
 │       ├── bin/
-│       │   └── apishift.js      # CLI bin wrapper
+│       │   └── apishift.js      # Executable CLI wrapper
 │       ├── src/
-│       │   ├── index.ts         # Commander entry point
+│       │   ├── index.ts         # CLI entry point
 │       │   └── commands/
-│       │       └── init.ts      # `apishift init` command
+│       │       └── init.ts      # Config init command
 │       └── package.json
 └── apps/
-    └── bot/                     # Cloudflare Worker Edge GitHub Bot
-        ├── wrangler.toml        # Cloudflare Worker configuration
+    └── bot/                     # Cloudflare Edge GitHub Bot
+        ├── wrangler.toml        # Cloudflare Workers configuration
         ├── src/
-        │   ├── index.ts         # Hono app & GitHub Webhook handler
+        │   ├── index.ts         # Hono web server & Webhook handler
         │   └── github/
-        │       └── pr.ts        # Automated PR generator
+        │       └── pr.ts        # Octokit PR generator
         └── package.json
 ```
 
@@ -81,13 +87,13 @@ apishift/
 git clone https://github.com/TurboRx/APIShift-Bot.git
 cd APIShift-Bot
 
-# Install dependencies across monorepo
+# Install dependencies across packages
 pnpm install
 
 # Build all packages and applications
 pnpm build
 
-# Run unit tests
+# Run test suite
 pnpm test
 ```
 
@@ -95,14 +101,14 @@ pnpm test
 
 ## 💻 CLI Usage (`@apishift/cli`)
 
-The `apishift` CLI allows developers to set up repository configuration locally.
+The `apishift` CLI enables local repository setup and manual AST code refactoring.
 
 ```bash
-# Initialize APIShift configuration in your codebase
+# Initialize APIShift configuration
 apishift init
 ```
 
-This creates an `apishift.config.json` file in your repository:
+This generates `apishift.config.json` in your project root:
 
 ```json
 {
@@ -119,15 +125,27 @@ This creates an `apishift.config.json` file in your repository:
 }
 ```
 
+### Comparing OpenAPI Specs
+
+```bash
+apishift diff old-openapi.json new-openapi.json
+```
+
+### Running AST Code Rewriter
+
+```bash
+apishift rewrite --file src/api.ts --rules '[{"oldName":"card","newName":"payment_method"}]'
+```
+
 ---
 
-## ☁️ Deploying the GitHub Bot (`apps/bot`)
+## ☁️ Deploying the Edge GitHub Bot (`apps/bot`)
 
-The bot runtime is designed for low-latency Cloudflare Workers Edge infrastructure using **Hono**.
+The bot runtime is deployed as a low-latency Cloudflare Worker using **Hono**.
 
-### Configuration
+### Environment Configuration
 
-Set the environment secret for GitHub Webhook verification:
+Set required secrets via Wrangler:
 
 ```bash
 cd apps/bot
@@ -135,7 +153,7 @@ npx wrangler secret put WEBHOOK_SECRET
 npx wrangler secret put GITHUB_TOKEN
 ```
 
-### Deployment
+### Deploy to Cloudflare Workers
 
 ```bash
 npx wrangler deploy
@@ -143,7 +161,7 @@ npx wrangler deploy
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
 
 Run unit tests via Vitest:
 
@@ -151,9 +169,9 @@ Run unit tests via Vitest:
 pnpm test
 ```
 
-Tests cover:
-1. **Schema Differ**: Detecting property renames, parameter deletions, and path modifications between OpenAPI specs.
-2. **AST Rewriter**: Validating TypeScript/JavaScript AST parsing, parameter renaming, method name updating, and clean source code generation.
+Tests validate:
+1. **Schema Differ**: Property rename detection, parameter removal tracking, and endpoint path migrations.
+2. **AST Engine**: Type-safe AST parsing, shorthand object transformations, method call renaming, and hybrid AI execution paths.
 
 ---
 
