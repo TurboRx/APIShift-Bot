@@ -71,24 +71,35 @@ app.post('/api/webhook', async (c) => {
 
     const githubToken = c.env.GITHUB_TOKEN;
     if (!githubToken) {
-      return c.json({
-        message: 'Webhook received but GITHUB_TOKEN secret is missing. Skipping PR creation.',
-        event,
-        owner,
-        repo,
-      }, 202);
+      return c.json(
+        {
+          message: 'Webhook received but GITHUB_TOKEN secret is missing. Skipping PR creation.',
+          event,
+          owner,
+          repo,
+        },
+        202
+      );
     }
 
     const octokit = new Octokit({ auth: githubToken });
 
     // Extract rename rules from payload (e.g. sent via repository_dispatch client_payload or spec diff payload)
-    const renameRules: RenameRule[] = payload.client_payload?.renameRules || payload.renameRules || [
-      { oldName: 'card', newName: 'payment_method', targetObject: 'charges.create' },
-    ];
-    const endpointUpdateRules: EndpointUpdateRule[] = payload.client_payload?.endpointUpdateRules || payload.endpointUpdateRules || [
-      { oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' },
-    ];
-    const targetFiles: string[] = payload.client_payload?.targetFiles || payload.targetFiles || ['src/index.ts', 'src/api.ts'];
+    const renameRules: RenameRule[] = payload.client_payload?.renameRules ||
+      payload.renameRules || [
+        { oldName: 'card', newName: 'payment_method', targetObject: 'charges.create' },
+      ];
+    const endpointUpdateRules: EndpointUpdateRule[] = payload.client_payload?.endpointUpdateRules ||
+      payload.endpointUpdateRules || [
+        {
+          oldPath: '/v1/charges',
+          newPath: '/v1/payment_intents',
+          oldFunctionName: 'charges',
+          newFunctionName: 'paymentIntents',
+        },
+      ];
+    const targetFiles: string[] = payload.client_payload?.targetFiles ||
+      payload.targetFiles || ['src/index.ts', 'src/api.ts'];
 
     try {
       const prResult = await createRefactoringPR({
@@ -103,19 +114,25 @@ app.post('/api/webhook', async (c) => {
       });
 
       if (prResult) {
-        return c.json({
-          status: 'success',
-          message: 'Created automated refactoring Pull Request',
-          prUrl: prResult.prUrl,
-          prNumber: prResult.prNumber,
-          branchName: prResult.branchName,
-          filesModified: prResult.filesModified,
-        }, 201);
+        return c.json(
+          {
+            status: 'success',
+            message: 'Created automated refactoring Pull Request',
+            prUrl: prResult.prUrl,
+            prNumber: prResult.prNumber,
+            branchName: prResult.branchName,
+            filesModified: prResult.filesModified,
+          },
+          201
+        );
       } else {
-        return c.json({
-          status: 'no_changes',
-          message: 'Analyzed target files. No code modifications were required.',
-        }, 200);
+        return c.json(
+          {
+            status: 'no_changes',
+            message: 'Analyzed target files. No code modifications were required.',
+          },
+          200
+        );
       }
     } catch (err) {
       console.error('Error creating refactoring PR:', err);

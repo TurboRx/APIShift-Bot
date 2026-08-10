@@ -10,9 +10,7 @@ export function initCommand(options: InitOptions = {}): void {
   const targetPath = path.join(process.cwd(), 'apishift.config.json');
 
   if (fs.existsSync(targetPath) && !options.force) {
-    console.log(
-      chalk.yellow('⚠️  apishift.config.json already exists in the current directory.')
-    );
+    console.log(chalk.yellow('⚠️  apishift.config.json already exists in the current directory.'));
     console.log(chalk.gray('Use --force to overwrite the existing configuration.'));
     return;
   }
@@ -24,12 +22,7 @@ export function initCommand(options: InitOptions = {}): void {
       specPath: './openapi.json',
       upstreamUrl: 'https://api.example.com/openapi.json',
     },
-    targetFiles: [
-      'src/**/*.ts',
-      'src/**/*.js',
-      'src/**/*.tsx',
-      'src/**/*.jsx',
-    ],
+    targetFiles: ['src/**/*.ts', 'src/**/*.js', 'src/**/*.tsx', 'src/**/*.jsx'],
     rules: {
       autoRenameProperties: true,
       autoUpdateEndpoints: true,

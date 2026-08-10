@@ -26,7 +26,9 @@ export async function runCLI(): Promise<void> {
     .description('Compare two OpenAPI specs and print breaking change matrix')
     .action(async (oldSpecPath: string, newSpecPath: string) => {
       try {
-        console.log(chalk.blue(`🔍 Comparing OpenAPI specs:\n  Old: ${oldSpecPath}\n  New: ${newSpecPath}\n`));
+        console.log(
+          chalk.blue(`🔍 Comparing OpenAPI specs:\n  Old: ${oldSpecPath}\n  New: ${newSpecPath}\n`)
+        );
         const oldContent = fs.readFileSync(path.resolve(oldSpecPath), 'utf-8');
         const newContent = fs.readFileSync(path.resolve(newSpecPath), 'utf-8');
 
@@ -46,7 +48,11 @@ export async function runCLI(): Promise<void> {
         if (result.renameRules.length > 0) {
           console.log(chalk.bold('\nParameter / Property Rename Rules:'));
           result.renameRules.forEach((rule: RenameRule) => {
-            console.log(chalk.cyan(`  - ${rule.oldName} ➔ ${rule.newName} (scope: ${rule.context || 'global'})`));
+            console.log(
+              chalk.cyan(
+                `  - ${rule.oldName} ➔ ${rule.newName} (scope: ${rule.context || 'global'})`
+              )
+            );
           });
         }
       } catch (err) {
@@ -59,7 +65,10 @@ export async function runCLI(): Promise<void> {
     .command('rewrite')
     .description('Run deterministic AST rewriter on source code file')
     .requiredOption('-f, --file <filePath>', 'Target TypeScript / JavaScript source file')
-    .option('-r, --rules <jsonRules>', 'JSON string of Rename Rules (e.g. [{"oldName":"card","newName":"payment_method"}])')
+    .option(
+      '-r, --rules <jsonRules>',
+      'JSON string of Rename Rules (e.g. [{"oldName":"card","newName":"payment_method"}])'
+    )
     .action((options: { file: string; rules?: string }) => {
       try {
         const filePath = path.resolve(options.file);
@@ -76,7 +85,11 @@ export async function runCLI(): Promise<void> {
 
         if (result.hasChanges) {
           fs.writeFileSync(filePath, result.code, 'utf-8');
-          console.log(chalk.green(`✅ Successfully updated ${filePath}! (${result.modifiedCount} changes applied)`));
+          console.log(
+            chalk.green(
+              `✅ Successfully updated ${filePath}! (${result.modifiedCount} changes applied)`
+            )
+          );
         } else {
           console.log(chalk.gray(`No matches found in ${filePath}. Code unchanged.`));
         }

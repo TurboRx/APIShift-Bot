@@ -12,10 +12,7 @@ const generate = (generatorModule as any).default || generatorModule;
  * Deterministic AST Rewriter engine using Babel parser, traverse, and generator.
  * Zero AI token cost, 100% deterministic AST transforms.
  */
-export function rewriteAST(
-  code: string,
-  options: ASTTransformOptions = {}
-): ASTTransformResult {
+export function rewriteAST(code: string, options: ASTTransformOptions = {}): ASTTransformResult {
   const { renames = [], endpointUpdates = [], filename = 'file.ts' } = options;
 
   if (!code || (renames.length === 0 && endpointUpdates.length === 0)) {
@@ -98,7 +95,9 @@ export function rewriteAST(
           if (t.isIdentifier(node.property) && node.property.name === epRule.oldFunctionName) {
             node.property.name = epRule.newFunctionName;
             modifiedCount++;
-            appliedRulesSet.add(`FunctionRename:${epRule.oldFunctionName}->${epRule.newFunctionName}`);
+            appliedRulesSet.add(
+              `FunctionRename:${epRule.oldFunctionName}->${epRule.newFunctionName}`
+            );
           }
         }
       }

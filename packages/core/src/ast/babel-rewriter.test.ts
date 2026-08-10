@@ -56,7 +56,14 @@ async function run() {
 `;
 
     const result = rewriteAST(inputCode, {
-      endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }],
+      endpointUpdates: [
+        {
+          oldPath: '/v1/charges',
+          newPath: '/v1/payment_intents',
+          oldFunctionName: 'charges',
+          newFunctionName: 'paymentIntents',
+        },
+      ],
       filename: 'run.ts',
     });
 

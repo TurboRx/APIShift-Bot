@@ -9,6 +9,7 @@
 APIShift Bot streamlines code migrations when upstream APIs (like Stripe, Twilio, or internal microservices) introduce breaking changes—such as parameter renames (`card` → `payment_method`) or endpoint migrations (`/v1/charges` → `/v1/payment_intents`).
 
 ### Key Capabilities
+
 - ⚡ **High-Performance AST Engine**: Instant, 100% type-safe Babel-powered AST code transformations.
 - 🤖 **Hybrid AI Fallback**: Optional LLM provider integration (OpenAI, Anthropic, Gemini) for handling complex semantic adaptations.
 - 🔍 **OpenAPI Spec Differ**: Automated diffing matrix that tracks schema property renames, parameter removals, and path updates.
@@ -77,6 +78,7 @@ apishift/
 ## 🛠 Quickstart & Setup
 
 ### Prerequisites
+
 - Node.js >= 18.0.0
 - pnpm >= 9.0.0
 
@@ -117,10 +119,7 @@ This generates `apishift.config.json` in your project root:
   "openapi": {
     "specPath": "./schemas/openapi.json"
   },
-  "targetFiles": [
-    "src/**/*.ts",
-    "src/**/*.js"
-  ],
+  "targetFiles": ["src/**/*.ts", "src/**/*.js"],
   "autoPr": true
 }
 ```
@@ -170,6 +169,7 @@ pnpm test
 ```
 
 Tests validate:
+
 1. **Schema Differ**: Property rename detection, parameter removal tracking, and endpoint path migrations.
 2. **AST Engine**: Type-safe AST parsing, shorthand object transformations, method call renaming, and hybrid AI execution paths.
 

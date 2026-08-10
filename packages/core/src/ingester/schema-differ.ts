@@ -363,7 +363,10 @@ function isRenamePair(oldName: string, newName: string): boolean {
  * Derives SDK method string from OpenAPI path (e.g. '/v1/charges' -> 'charges.create')
  */
 function deriveFunctionName(path: string): string {
-  const segments = path.split('/').filter(Boolean).filter((s) => !s.startsWith('{'));
+  const segments = path
+    .split('/')
+    .filter(Boolean)
+    .filter((s) => !s.startsWith('{'));
   if (segments.length === 0) return 'apiCall';
   const resource = segments[segments.length - 1] || 'api';
   return resource;

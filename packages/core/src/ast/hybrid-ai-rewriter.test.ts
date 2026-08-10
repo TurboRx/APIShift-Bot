@@ -17,6 +17,6 @@ const payment = await stripe.charges.create({
 
     expect(result.hasChanges).toBe(true);
     expect(result.usedAIFallback).toBe(false);
-    expect(result.code).toContain('payment_method: \'tok_mastercard\'');
+    expect(result.code).toContain("payment_method: 'tok_mastercard'");
   });
 });

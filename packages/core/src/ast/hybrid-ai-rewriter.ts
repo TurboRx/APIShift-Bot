@@ -74,7 +74,11 @@ async function invokeAIProvider(
       body: JSON.stringify({
         model: options.model || 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are an expert TypeScript refactoring assistant. Return ONLY the transformed code.' },
+          {
+            role: 'system',
+            content:
+              'You are an expert TypeScript refactoring assistant. Return ONLY the transformed code.',
+          },
           { role: 'user', content: prompt },
         ],
         temperature: 0,
@@ -85,7 +89,10 @@ async function invokeAIProvider(
       const data: any = await res.json();
       const content = data.choices?.[0]?.message?.content;
       if (content) {
-        return content.replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '').trim();
+        return content
+          .replace(/^```[a-z]*\n/i, '')
+          .replace(/\n```$/i, '')
+          .trim();
       }
     }
   }
