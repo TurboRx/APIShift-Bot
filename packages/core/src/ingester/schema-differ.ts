@@ -138,8 +138,20 @@ export async function diffSchemas(
   }
 
   // 2. Compare Global Schemas / Components
-  const oldSchemas = oldSpec.components?.schemas || {};
-  const newSchemas = newSpec.components?.schemas || {};
+  const oldSchemas =
+    oldSpec.components?.schemas ||
+    ((oldSpec as Record<string, unknown>).definitions as Record<
+      string,
+      { properties?: Record<string, Record<string, unknown>> }
+    >) ||
+    {};
+  const newSchemas =
+    newSpec.components?.schemas ||
+    ((newSpec as Record<string, unknown>).definitions as Record<
+      string,
+      { properties?: Record<string, Record<string, unknown>> }
+    >) ||
+    {};
 
   for (const [schemaName, oldSchema] of Object.entries(oldSchemas)) {
     const newSchema = newSchemas[schemaName];

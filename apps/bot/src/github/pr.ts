@@ -60,8 +60,11 @@ export async function createRefactoringPR(
   const filesModified: string[] = [];
   let totalRulesApplied = 0;
 
+  // Resolve glob patterns (e.g. src/**/*.ts) to actual repository file paths
+  const resolvedPaths = await resolveTargetFiles(octokit, owner, repo, baseSha, filePaths);
+
   // 3. Process each targeted file: fetch, run AST rewriter, commit changes
-  for (const filePath of filePaths) {
+  for (const filePath of resolvedPaths) {
     try {
       const { data: fileData } = await octokit.repos.getContent({
         owner,
@@ -186,4 +189,60 @@ function generatePRBody(params: {
   body += `_Powered by [APIShift Bot](https://github.com/TurboRx/APIShift-Bot) — Zero AI Token Cost Deterministic Refactoring Engine._`;
 
   return body;
+}
+
+/**
+ * Resolves glob patterns (e.g. src/pattern/*.ts) by querying the repository git tree via Octokit
+ */
+async function resolveTargetFiles(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  treeSha: string,
+  filePaths: string[]
+): Promise<string[]> {
+  const hasGlob = filePaths.some((p) => p.includes('*') || p.includes('?'));
+  if (!hasGlob) return filePaths;
+
+  try {
+    const { data: treeData } = await octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: treeSha,
+      recursive: 'true',
+    });
+
+    const allFiles = (treeData.tree || [])
+      .filter((item) => item.type === 'blob' && item.path)
+      .map((item) => item.path as string);
+
+    const matchedFiles = new Set<string>();
+    for (const pattern of filePaths) {
+      if (pattern.includes('*') || pattern.includes('?')) {
+        const regex = globToRegex(pattern);
+        for (const file of allFiles) {
+          if (regex.test(file)) {
+            matchedFiles.add(file);
+          }
+        }
+      } else {
+        matchedFiles.add(pattern);
+      }
+    }
+
+    return Array.from(matchedFiles);
+  } catch (err) {
+    console.warn('Failed to expand file globs from repo tree:', err);
+    return filePaths;
+  }
+}
+
+function globToRegex(glob: string): RegExp {
+  const reStr = glob
+    .replace(/\./g, '\\.')
+    .replace(/\*\*/g, 'TMP_DOUBLE_STAR')
+    .replace(/\*/g, '[^/]*')
+    .replace(/TMP_DOUBLE_STAR/g, '.*')
+    .replace(/\?/g, '.');
+  return new RegExp(`^${reStr}$`);
 }

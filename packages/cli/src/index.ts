@@ -24,7 +24,8 @@ export async function runCLI(): Promise<void> {
   program
     .command('diff <oldSpecPath> <newSpecPath>')
     .description('Compare two OpenAPI specs and print breaking change matrix')
-    .action(async (oldSpecPath: string, newSpecPath: string) => {
+    .option('-o, --output <outputPath>', 'Save diff rules and breaking changes to a JSON file')
+    .action(async (oldSpecPath: string, newSpecPath: string, options: { output?: string }) => {
       try {
         console.log(
           chalk.blue(`🔍 Comparing OpenAPI specs:\n  Old: ${oldSpecPath}\n  New: ${newSpecPath}\n`)
@@ -33,6 +34,12 @@ export async function runCLI(): Promise<void> {
         const newContent = fs.readFileSync(path.resolve(newSpecPath), 'utf-8');
 
         const result = await diffSchemas(oldContent, newContent);
+
+        if (options.output) {
+          const outputPath = path.resolve(options.output);
+          fs.writeFileSync(outputPath, JSON.stringify(result, null, 2), 'utf-8');
+          console.log(chalk.green(`💾 Saved diff results to: ${outputPath}\n`));
+        }
 
         if (!result.hasBreakingChanges) {
           console.log(chalk.green('✅ No breaking changes detected!'));
@@ -78,10 +85,29 @@ export async function runCLI(): Promise<void> {
         }
 
         const sourceCode = fs.readFileSync(filePath, 'utf-8');
-        const renames = options.rules ? JSON.parse(options.rules) : [];
+        let renames: RenameRule[] = [];
+        let endpointUpdates: any[] = [];
+
+        if (options.rules) {
+          const parsed = JSON.parse(options.rules);
+          if (Array.isArray(parsed)) {
+            renames = parsed;
+          } else if (typeof parsed === 'object') {
+            renames = parsed.renames || parsed.renameRules || [];
+            endpointUpdates = parsed.endpointUpdates || parsed.endpointUpdateRules || [];
+          }
+        } else {
+          // Fallback: check apishift.config.json in current directory
+          const configPath = path.join(process.cwd(), 'apishift.config.json');
+          if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+            renames = config.renames || config.renameRules || [];
+            endpointUpdates = config.endpointUpdates || config.endpointUpdateRules || [];
+          }
+        }
 
         console.log(chalk.blue(`⚡ Running Babel AST rewriter on ${filePath}...`));
-        const result = rewriteAST(sourceCode, { renames, filename: filePath });
+        const result = rewriteAST(sourceCode, { renames, endpointUpdates, filename: filePath });
 
         if (result.hasChanges) {
           fs.writeFileSync(filePath, result.code, 'utf-8');

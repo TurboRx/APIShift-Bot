@@ -39,6 +39,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     sourceType: 'module',
     plugins,
     allowReturnOutsideFunction: true,
+    allowImportExportEverywhere: true,
+    allowSuperOutsideMethod: true,
   });
 
   let modifiedCount = 0;
@@ -78,6 +80,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 
           modifiedCount++;
           appliedRulesSet.add(`PropertyRename:${rule.oldName}->${rule.newName}`);
+          break;
         }
       }
     },
@@ -94,6 +97,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
             appliedRulesSet.add(
               `FunctionRename:${epRule.oldFunctionName}->${epRule.newFunctionName}`
             );
+            break;
           }
         }
       }
@@ -106,7 +110,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       for (const epRule of endpointUpdates) {
         if (epRule.oldPath && epRule.newPath) {
           if (node.value === epRule.oldPath || node.value.includes(epRule.oldPath)) {
-            node.value = node.value.replace(epRule.oldPath, epRule.newPath);
+            node.value = node.value.replaceAll(epRule.oldPath, epRule.newPath);
             modifiedCount++;
             appliedRulesSet.add(`EndpointPathUpdate:${epRule.oldPath}->${epRule.newPath}`);
           }
@@ -122,8 +126,13 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
         if (epRule.oldPath && epRule.newPath) {
           for (const element of node.quasis) {
             if (element.value.raw.includes(epRule.oldPath)) {
-              element.value.raw = element.value.raw.replace(epRule.oldPath, epRule.newPath);
-              element.value.cooked = element.value.cooked?.replace(epRule.oldPath, epRule.newPath);
+              element.value.raw = element.value.raw.replaceAll(epRule.oldPath, epRule.newPath);
+              if (typeof element.value.cooked === 'string') {
+                element.value.cooked = element.value.cooked.replaceAll(
+                  epRule.oldPath,
+                  epRule.newPath
+                );
+              }
               modifiedCount++;
               appliedRulesSet.add(`EndpointPathUpdate:${epRule.oldPath}->${epRule.newPath}`);
             }
@@ -161,5 +170,5 @@ function isWithinTargetCall(path: any, targetCall: string): boolean {
     }
     current = current.parentPath;
   }
-  return true;
+  return false;
 }

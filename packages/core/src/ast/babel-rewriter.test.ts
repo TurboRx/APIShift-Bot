@@ -88,6 +88,35 @@ async function fetchCharges() {
     expect(result.code).toContain('/v1/payment_intents');
   });
 
+  it('respects targetObject scope filtering and skips non-target object properties', () => {
+    const inputCode = `
+const config = { card: 'my_card' };
+const charge = stripe.charges.create({ card: 'tok_visa' });
+`;
+
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'card', newName: 'payment_method', targetObject: 'charges.create' }],
+      filename: 'scope.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.modifiedCount).toBe(1);
+    expect(result.code).toContain("card: 'my_card'");
+    expect(result.code).toContain("payment_method: 'tok_visa'");
+  });
+
+  it('updates template literal endpoint strings', () => {
+    const inputCode = 'const url = `/v1/charges/${id}`;';
+
+    const result = rewriteAST(inputCode, {
+      endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents' }],
+      filename: 'template.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('/v1/payment_intents/${id}');
+  });
+
   it('returns unchanged code when no rules match', () => {
     const inputCode = `const sum = (a: number, b: number) => a + b;`;
 
