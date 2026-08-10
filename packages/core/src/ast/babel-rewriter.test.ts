@@ -117,6 +117,35 @@ const charge = stripe.charges.create({ card: 'tok_visa' });
     expect(result.code).toContain('/v1/payment_intents/${id}');
   });
 
+  it('renames property signatures in TypeScript interfaces', () => {
+    const inputCode = `
+interface CreateChargeRequest {
+  amount: number;
+  card: string;
+}
+`;
+
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'card', newName: 'payment_method' }],
+      filename: 'types.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('payment_method: string;');
+  });
+
+  it('renames JSX component attributes matching rename rules', () => {
+    const inputCode = `<PaymentForm card="tok_visa" amount={500} />;`;
+
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'card', newName: 'payment_method' }],
+      filename: 'component.tsx',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('payment_method="tok_visa"');
+  });
+
   it('returns unchanged code when no rules match', () => {
     const inputCode = `const sum = (a: number, b: number) => a + b;`;
 

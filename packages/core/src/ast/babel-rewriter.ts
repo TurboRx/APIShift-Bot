@@ -140,6 +140,47 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
         }
       }
     },
+
+    // 5. Rewrite TypeScript Type Property Signatures (e.g., interface Params { card: string })
+    TSPropertySignature(path: any) {
+      const node = path.node as t.TSPropertySignature;
+      const keyName = t.isIdentifier(node.key)
+        ? node.key.name
+        : t.isStringLiteral(node.key)
+          ? node.key.value
+          : null;
+
+      if (!keyName) return;
+
+      for (const rule of renames) {
+        if (keyName === rule.oldName) {
+          if (t.isIdentifier(node.key)) {
+            node.key.name = rule.newName;
+          } else if (t.isStringLiteral(node.key)) {
+            node.key.value = rule.newName;
+          }
+          modifiedCount++;
+          appliedRulesSet.add(`TypePropertyRename:${rule.oldName}->${rule.newName}`);
+          break;
+        }
+      }
+    },
+
+    // 6. Rewrite JSX Attributes (e.g. <PaymentForm card={tok} /> -> <PaymentForm payment_method={tok} />)
+    JSXAttribute(path: any) {
+      const node = path.node as t.JSXAttribute;
+      if (t.isJSXIdentifier(node.name)) {
+        const attrName = node.name.name;
+        for (const rule of renames) {
+          if (attrName === rule.oldName) {
+            node.name.name = rule.newName;
+            modifiedCount++;
+            appliedRulesSet.add(`JSXAttrRename:${rule.oldName}->${rule.newName}`);
+            break;
+          }
+        }
+      }
+    },
   });
 
   const hasChanges = modifiedCount > 0;
