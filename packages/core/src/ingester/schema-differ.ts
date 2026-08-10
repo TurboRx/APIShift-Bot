@@ -6,13 +6,49 @@ import type {
   SchemaDiffResult,
 } from '../types/index.js';
 
+export interface OpenAPIParameter {
+  name: string;
+  in: string;
+  required?: boolean;
+  schema?: { type?: string };
+  'x-apishift-renamed-from'?: string;
+}
+
+export interface OpenAPIOperation {
+  summary?: string;
+  parameters?: OpenAPIParameter[];
+  requestBody?: {
+    content?: {
+      'application/json'?: {
+        schema?: {
+          type?: string;
+          properties?: Record<string, Record<string, unknown>>;
+        };
+      };
+    };
+  };
+  [key: string]: unknown;
+}
+
+export interface OpenAPIPathItem {
+  get?: OpenAPIOperation;
+  post?: OpenAPIOperation;
+  put?: OpenAPIOperation;
+  patch?: OpenAPIOperation;
+  delete?: OpenAPIOperation;
+  options?: OpenAPIOperation;
+  head?: OpenAPIOperation;
+  'x-apishift-migrated-from'?: string;
+  [key: string]: unknown;
+}
+
 export interface OpenAPIObject {
   openapi?: string;
   swagger?: string;
   info?: { title?: string; version?: string };
-  paths?: Record<string, any>;
+  paths?: Record<string, OpenAPIPathItem>;
   components?: {
-    schemas?: Record<string, any>;
+    schemas?: Record<string, { properties?: Record<string, Record<string, unknown>> }>;
   };
 }
 
@@ -68,7 +104,15 @@ export async function diffSchemas(
     }
 
     // Inspect HTTP methods on shared paths
-    const httpMethods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
+    const httpMethods: Array<'get' | 'post' | 'put' | 'patch' | 'delete' | 'options' | 'head'> = [
+      'get',
+      'post',
+      'put',
+      'patch',
+      'delete',
+      'options',
+      'head',
+    ];
     for (const method of httpMethods) {
       const oldOp = oldPathObj[method];
       const newOp = newPathObj[method];
@@ -153,16 +197,16 @@ async function parseSpec(input: OpenAPIObject | string): Promise<OpenAPIObject> 
 function compareOperations(
   path: string,
   method: string,
-  oldOp: any,
-  newOp: any
+  oldOp: OpenAPIOperation,
+  newOp: OpenAPIOperation
 ): { changes: BreakingChange[]; renames: RenameRule[] } {
   const changes: BreakingChange[] = [];
   const renames: RenameRule[] = [];
   const targetObject = deriveFunctionName(path);
 
   // 1. Compare parameters array (query, path, header params)
-  const oldParams: any[] = oldOp.parameters || [];
-  const newParams: any[] = newOp.parameters || [];
+  const oldParams: OpenAPIParameter[] = oldOp.parameters || [];
+  const newParams: OpenAPIParameter[] = newOp.parameters || [];
 
   const oldParamNames = new Set(oldParams.map((p) => p.name));
   const newParamNames = new Set(newParams.map((p) => p.name));
@@ -262,7 +306,9 @@ function compareOperations(
 /**
  * Extracts request body properties from an operation spec
  */
-function extractRequestBodyProps(op: any): Record<string, any> | null {
+function extractRequestBodyProps(
+  op: OpenAPIOperation
+): Record<string, Record<string, unknown>> | null {
   const content = op?.requestBody?.content;
   if (!content) return null;
   const jsonSchema = content['application/json']?.schema;
@@ -277,8 +323,8 @@ function extractRequestBodyProps(op: any): Record<string, any> | null {
  */
 function compareSchemaProperties(
   schemaName: string,
-  oldSchema: any,
-  newSchema: any
+  oldSchema: { properties?: Record<string, Record<string, unknown>> },
+  newSchema: { properties?: Record<string, Record<string, unknown>> }
 ): { changes: BreakingChange[]; renames: RenameRule[] } {
   const changes: BreakingChange[] = [];
   const renames: RenameRule[] = [];
@@ -322,8 +368,8 @@ function compareSchemaProperties(
  */
 function findRenamedPath(
   oldPath: string,
-  oldPathObj: any,
-  newPaths: Record<string, any>
+  oldPathObj: OpenAPIPathItem,
+  newPaths: Record<string, OpenAPIPathItem>
 ): { newPath: string } | null {
   for (const [newPath, newPathObj] of Object.entries(newPaths)) {
     if (newPathObj['x-apishift-migrated-from'] === oldPath) {

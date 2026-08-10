@@ -5,8 +5,16 @@ import * as t from '@babel/types';
 import type { ASTTransformOptions, ASTTransformResult } from '../types/index.js';
 
 // ESM Interop handling for Babel traverse and generator
-const traverse = (traverseModule as any).default || traverseModule;
-const generate = (generatorModule as any).default || generatorModule;
+const traverse =
+  (traverseModule as unknown as { default?: typeof traverseModule }).default || traverseModule;
+const generate =
+  (generatorModule as unknown as { default?: typeof generatorModule }).default || generatorModule;
+
+type TraversePath = {
+  node: unknown;
+  parentPath?: TraversePath;
+  isCallExpression: () => boolean;
+};
 
 /**
  * Deterministic AST Rewriter engine using Babel parser, traverse, and generator.
@@ -28,7 +36,15 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
   const isTS = filename.endsWith('.ts') || filename.endsWith('.tsx');
   const isJSX = filename.endsWith('.jsx') || filename.endsWith('.tsx') || code.includes('<');
 
-  const plugins: any[] = [
+  const plugins: Array<
+    | 'asyncGenerators'
+    | 'classProperties'
+    | 'decorators-legacy'
+    | 'dynamicImport'
+    | 'objectRestSpread'
+    | 'typescript'
+    | 'jsx'
+  > = [
     'asyncGenerators',
     'classProperties',
     'decorators-legacy',
@@ -50,8 +66,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 
   traverse(ast, {
     // 1. Rewrite Object Properties (e.g., { card: token } -> { payment_method: token })
-    ObjectProperty(path: any) {
-      const node = path.node;
+    ObjectProperty(path: TraversePath) {
+      const node = path.node as t.ObjectProperty;
       const keyName = t.isIdentifier(node.key)
         ? node.key.name
         : t.isStringLiteral(node.key)
@@ -87,8 +103,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 2. Rewrite Member Expressions & Function Calls (e.g. stripe.charges.create -> stripe.paymentIntents.create)
-    MemberExpression(path: any) {
-      const node = path.node;
+    MemberExpression(path: TraversePath) {
+      const node = path.node as t.MemberExpression;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldFunctionName && epRule.newFunctionName) {
@@ -104,8 +120,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 3. Rewrite String Literals (e.g. fetch('/v1/charges') -> fetch('/v1/payment_intents'))
-    StringLiteral(path: any) {
-      const node = path.node;
+    StringLiteral(path: TraversePath) {
+      const node = path.node as t.StringLiteral;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldPath && epRule.newPath) {
@@ -119,8 +135,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 4. Rewrite Template Literals containing endpoint paths
-    TemplateLiteral(path: any) {
-      const node = path.node;
+    TemplateLiteral(path: TraversePath) {
+      const node = path.node as t.TemplateLiteral;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldPath && epRule.newPath) {
@@ -153,11 +169,11 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 /**
  * Helper to check if an AST path is inside a target function/method call
  */
-function isWithinTargetCall(path: any, targetCall: string): boolean {
-  let current = path.parentPath;
+function isWithinTargetCall(path: TraversePath, targetCall: string): boolean {
+  let current: TraversePath | undefined = path.parentPath;
   while (current) {
     if (current.isCallExpression()) {
-      const callee = current.node.callee;
+      const callee = (current.node as t.CallExpression).callee;
       const calleeString = generate(callee).code;
       if (calleeString.includes(targetCall)) {
         return true;
@@ -165,5 +181,5 @@ function isWithinTargetCall(path: any, targetCall: string): boolean {
     }
     current = current.parentPath;
   }
-  return true; // Default fallback to match if no specific call context restriction
+  return true;
 }

@@ -44,7 +44,7 @@ app.post('/api/webhook', async (c) => {
     }
   }
 
-  let payload: any;
+  let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(rawBody);
   } catch {
@@ -60,14 +60,15 @@ app.post('/api/webhook', async (c) => {
     event === 'push' ||
     event === 'workflow_dispatch'
   ) {
-    const repository = payload.repository;
+    const repository = payload.repository as Record<string, unknown> | undefined;
     if (!repository) {
       return c.json({ message: 'Event ignored: no repository object in payload' }, 200);
     }
 
-    const owner = repository.owner?.login || repository.owner?.name;
-    const repo = repository.name;
-    const baseBranch = payload.repository?.default_branch || c.env.DEFAULT_BRANCH || 'main';
+    const ownerObj = repository.owner as Record<string, unknown> | undefined;
+    const owner = (ownerObj?.login || ownerObj?.name || 'unknown') as string;
+    const repo = repository.name as string;
+    const baseBranch = (repository.default_branch || c.env.DEFAULT_BRANCH || 'main') as string;
 
     const githubToken = c.env.GITHUB_TOKEN;
     if (!githubToken) {
@@ -84,22 +85,27 @@ app.post('/api/webhook', async (c) => {
 
     const octokit = new Octokit({ auth: githubToken });
 
-    // Extract rename rules from payload (e.g. sent via repository_dispatch client_payload or spec diff payload)
-    const renameRules: RenameRule[] = payload.client_payload?.renameRules ||
-      payload.renameRules || [
+    const clientPayload = payload.client_payload as Record<string, unknown> | undefined;
+
+    // Extract rename rules from payload
+    const renameRules: RenameRule[] = (clientPayload?.renameRules as RenameRule[]) ||
+      (payload.renameRules as RenameRule[]) || [
         { oldName: 'card', newName: 'payment_method', targetObject: 'charges.create' },
       ];
-    const endpointUpdateRules: EndpointUpdateRule[] = payload.client_payload?.endpointUpdateRules ||
-      payload.endpointUpdateRules || [
-        {
-          oldPath: '/v1/charges',
-          newPath: '/v1/payment_intents',
-          oldFunctionName: 'charges',
-          newFunctionName: 'paymentIntents',
-        },
-      ];
-    const targetFiles: string[] = payload.client_payload?.targetFiles ||
-      payload.targetFiles || ['src/index.ts', 'src/api.ts'];
+
+    const endpointUpdateRules: EndpointUpdateRule[] =
+      (clientPayload?.endpointUpdateRules as EndpointUpdateRule[]) ||
+        (payload.endpointUpdateRules as EndpointUpdateRule[]) || [
+          {
+            oldPath: '/v1/charges',
+            newPath: '/v1/payment_intents',
+            oldFunctionName: 'charges',
+            newFunctionName: 'paymentIntents',
+          },
+        ];
+
+    const targetFiles: string[] = (clientPayload?.targetFiles as string[]) ||
+      (payload.targetFiles as string[]) || ['src/index.ts', 'src/api.ts'];
 
     try {
       const prResult = await createRefactoringPR({

@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
-import { Octokit } from '@octokit/rest';
-import { rewriteAST, type RenameRule, type EndpointUpdateRule } from '@apishift/core';
+import type { Octokit } from '@octokit/rest';
+import type { RenameRule, EndpointUpdateRule } from '@apishift/core';
+import { rewriteAST } from '@apishift/core';
 
 export interface CreateRefactoringPROptions {
   octokit: Octokit;
