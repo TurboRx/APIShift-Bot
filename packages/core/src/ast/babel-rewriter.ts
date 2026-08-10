@@ -5,17 +5,16 @@ import * as t from '@babel/types';
 import type { ASTTransformOptions, ASTTransformResult } from '../types/index.js';
 
 // ESM Interop handling for Babel traverse and generator
-const traverse = (traverseModule as unknown as { default?: typeof traverseModule }).default || traverseModule;
-const generate = (generatorModule as unknown as { default?: typeof generatorModule }).default || generatorModule;
+const traverse =
+  (traverseModule as unknown as { default?: typeof traverseModule }).default || traverseModule;
+const generate =
+  (generatorModule as unknown as { default?: typeof generatorModule }).default || generatorModule;
 
 /**
  * Deterministic AST Rewriter engine using Babel parser, traverse, and generator.
  * Zero AI token cost, 100% deterministic AST transforms.
  */
-export function rewriteAST(
-  code: string,
-  options: ASTTransformOptions = {}
-): ASTTransformResult {
+export function rewriteAST(code: string, options: ASTTransformOptions = {}): ASTTransformResult {
   const { renames = [], endpointUpdates = [], filename = 'file.ts' } = options;
 
   if (!code || (renames.length === 0 && endpointUpdates.length === 0)) {
