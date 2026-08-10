@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@apishift/core": "workspace:*",
-    "chalk": "^5.4.1",
-    "commander": "^12.1.0"
+    "chalk": "^6.0.0",
+    "commander": "^15.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.13.0",
-    "typescript": "^5.8.2"
+    "@types/node": "^26.1.2",
+    "typescript": "^5.9.3"
   }
 }
