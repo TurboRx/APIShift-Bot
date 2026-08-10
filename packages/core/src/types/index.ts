@@ -7,9 +7,7 @@ export type BreakingChangeType =
   | 'PARAM_REMOVED'
   | 'ENDPOINT_DEPRECATED'
   | 'ENDPOINT_RENAMED'
-  | 'PROPERTY_RENAMED'
-  | 'REQUIRED_PARAM_ADDED'
-  | 'PARAM_TYPE_CHANGED';
+  | 'PROPERTY_RENAMED';
 
 export interface RenameRule {
   /** The old parameter or property name (e.g., 'card') */

@@ -18,15 +18,14 @@ export interface OpenAPIOperation {
   summary?: string;
   parameters?: OpenAPIParameter[];
   requestBody?: {
-    content?: Record<
-      string,
-      {
+    content?: {
+      'application/json'?: {
         schema?: {
           type?: string;
           properties?: Record<string, Record<string, unknown>>;
         };
-      }
-    >;
+      };
+    };
   };
   [key: string]: unknown;
 }
@@ -263,21 +262,7 @@ function compareOperations(
     }
   }
 
-  // Check for newly added REQUIRED parameters (Breaking Change)
-  for (const added of addedParams) {
-    const isRenameMatch = renames.some((r) => r.newName === added.name);
-    if (added.required && !isRenameMatch) {
-      changes.push({
-        id: `param-required-added-${path}-${method}-${added.name}`,
-        type: 'REQUIRED_PARAM_ADDED',
-        path,
-        method: method.toUpperCase(),
-        description: `New required parameter '${added.name}' added to ${method.toUpperCase()} ${path}`,
-      });
-    }
-  }
-
-  // 2. Compare Request Body schemas
+  // 2. Compare JSON Request Body schemas
   const oldBodyProps = extractRequestBodyProps(oldOp);
   const newBodyProps = extractRequestBodyProps(newOp);
 
@@ -331,23 +316,16 @@ function compareOperations(
 }
 
 /**
- * Extracts request body properties from an operation spec across all common media types
+ * Extracts request body properties from an operation spec
  */
 function extractRequestBodyProps(
   op: OpenAPIOperation
 ): Record<string, Record<string, unknown>> | null {
   const content = op?.requestBody?.content;
   if (!content) return null;
-
-  const mediaType =
-    content['application/json'] ||
-    content['application/x-www-form-urlencoded'] ||
-    content['multipart/form-data'] ||
-    content['*/*'];
-
-  const schema = mediaType?.schema;
-  if (schema && schema.properties) {
-    return schema.properties;
+  const jsonSchema = content['application/json']?.schema;
+  if (jsonSchema && jsonSchema.properties) {
+    return jsonSchema.properties;
   }
   return null;
 }
@@ -368,20 +346,6 @@ function compareSchemaProperties(
 
   const oldKeys = Object.keys(oldProps);
   const newKeys = Object.keys(newProps);
-
-  // Check property type changes on shared keys
-  for (const key of oldKeys) {
-    const oldProp = oldProps[key];
-    const newProp = newProps[key];
-    if (newProp && oldProp?.type && newProp?.type && oldProp.type !== newProp.type) {
-      changes.push({
-        id: `schema-prop-type-changed-${schemaName}-${key}`,
-        type: 'PARAM_TYPE_CHANGED',
-        path: `#/components/schemas/${schemaName}/${key}`,
-        description: `Property '${key}' in schema '${schemaName}' changed type from '${oldProp.type}' to '${newProp.type}'`,
-      });
-    }
-  }
 
   const removedKeys = oldKeys.filter((k) => !newKeys.includes(k));
   const addedKeys = newKeys.filter((k) => !oldKeys.includes(k));
