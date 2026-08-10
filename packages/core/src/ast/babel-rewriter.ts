@@ -5,22 +5,17 @@ import * as t from '@babel/types';
 import type { ASTTransformOptions, ASTTransformResult } from '../types/index.js';
 
 // ESM Interop handling for Babel traverse and generator
-const traverse =
-  (traverseModule as unknown as { default?: typeof traverseModule }).default || traverseModule;
-const generate =
-  (generatorModule as unknown as { default?: typeof generatorModule }).default || generatorModule;
-
-type TraversePath = {
-  node: unknown;
-  parentPath?: TraversePath;
-  isCallExpression: () => boolean;
-};
+const traverse = (traverseModule as unknown as { default?: typeof traverseModule }).default || traverseModule;
+const generate = (generatorModule as unknown as { default?: typeof generatorModule }).default || generatorModule;
 
 /**
  * Deterministic AST Rewriter engine using Babel parser, traverse, and generator.
  * Zero AI token cost, 100% deterministic AST transforms.
  */
-export function rewriteAST(code: string, options: ASTTransformOptions = {}): ASTTransformResult {
+export function rewriteAST(
+  code: string,
+  options: ASTTransformOptions = {}
+): ASTTransformResult {
   const { renames = [], endpointUpdates = [], filename = 'file.ts' } = options;
 
   if (!code || (renames.length === 0 && endpointUpdates.length === 0)) {
@@ -66,7 +61,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 
   traverse(ast, {
     // 1. Rewrite Object Properties (e.g., { card: token } -> { payment_method: token })
-    ObjectProperty(path: TraversePath) {
+    ObjectProperty(path: any) {
       const node = path.node as t.ObjectProperty;
       const keyName = t.isIdentifier(node.key)
         ? node.key.name
@@ -103,7 +98,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 2. Rewrite Member Expressions & Function Calls (e.g. stripe.charges.create -> stripe.paymentIntents.create)
-    MemberExpression(path: TraversePath) {
+    MemberExpression(path: any) {
       const node = path.node as t.MemberExpression;
 
       for (const epRule of endpointUpdates) {
@@ -120,7 +115,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 3. Rewrite String Literals (e.g. fetch('/v1/charges') -> fetch('/v1/payment_intents'))
-    StringLiteral(path: TraversePath) {
+    StringLiteral(path: any) {
       const node = path.node as t.StringLiteral;
 
       for (const epRule of endpointUpdates) {
@@ -135,7 +130,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 4. Rewrite Template Literals containing endpoint paths
-    TemplateLiteral(path: TraversePath) {
+    TemplateLiteral(path: any) {
       const node = path.node as t.TemplateLiteral;
 
       for (const epRule of endpointUpdates) {
@@ -169,10 +164,10 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 /**
  * Helper to check if an AST path is inside a target function/method call
  */
-function isWithinTargetCall(path: TraversePath, targetCall: string): boolean {
-  let current: TraversePath | undefined = path.parentPath;
+function isWithinTargetCall(path: any, targetCall: string): boolean {
+  let current: any = path.parentPath;
   while (current) {
-    if (current.isCallExpression()) {
+    if (current.isCallExpression && current.isCallExpression()) {
       const callee = (current.node as t.CallExpression).callee;
       const calleeString = generate(callee).code;
       if (calleeString.includes(targetCall)) {
