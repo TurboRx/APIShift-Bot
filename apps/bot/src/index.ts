@@ -14,6 +14,8 @@ const app = new Hono<{ Bindings: Env }>();
 
 import { renderDashboardHTML } from './web/dashboard.js';
 import { pollVendorSpecs } from './cron/spec-watcher.js';
+import { globalWebhookQueue } from './queue/webhook-queue.js';
+import { batchFleetRefactor } from './fleet/fleet-manager.js';
 import { rewriteAST } from '@apishift/core';
 
 // 1. Web Dashboard & Info routes
@@ -40,6 +42,32 @@ app.post('/api/refactor', async (c) => {
 app.get('/api/cron/spec-watcher', async (c) => {
   const results = await pollVendorSpecs();
   return c.json({ status: 'success', timestamp: new Date().toISOString(), results });
+});
+
+// Webhook Queue Stats API
+app.get('/api/queue/status', (c) => {
+  const stats = globalWebhookQueue.getStats();
+  const jobs = globalWebhookQueue.getJobs(20);
+  return c.json({ status: 'success', stats, recentJobs: jobs });
+});
+
+// Fleet Batch Refactor API
+app.post('/api/fleet/migrate', async (c) => {
+  const githubToken = c.env.GITHUB_TOKEN;
+  if (!githubToken) {
+    return c.json(
+      { error: 'GITHUB_TOKEN environment secret is required for fleet migration' },
+      401
+    );
+  }
+  try {
+    const body = await c.req.json();
+    const octokit = new Octokit({ auth: githubToken });
+    const result = await batchFleetRefactor(octokit, body);
+    return c.json({ status: 'success', result });
+  } catch (err) {
+    return c.json({ error: 'Failed to process fleet migration', details: String(err) }, 500);
+  }
 });
 
 // 2. GitHub Webhook Handler
@@ -69,6 +97,7 @@ app.post('/api/webhook', async (c) => {
   }
 
   console.log(`Received GitHub event: ${event}`);
+  globalWebhookQueue.enqueueJob(event, payload);
 
   // Handle repository_dispatch or check_suite.requested events
   if (

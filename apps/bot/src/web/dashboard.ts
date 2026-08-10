@@ -1,6 +1,6 @@
 /**
  * APIShift Web Dashboard & Interactive Workbench
- * Premium dark mode glassmorphism UI with Live AST Playground & Vendor Monitor
+ * Premium dark mode UI with Monaco Diff Editor, Fleet Manager, and Queue Monitor
  */
 
 export function renderDashboardHTML(): string {
@@ -9,7 +9,7 @@ export function renderDashboardHTML(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>APIShift — Self-Maintaining APIs for Engineering Teams</title>
+  <title>APIShift — Self-Maintaining APIs Platform</title>
   <meta name="description" content="APIShift is Dependabot for API Code Usages. Automatically detect breaking API changes and submit deterministic AST refactoring Pull Requests across customer codebases.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,10 +17,9 @@ export function renderDashboardHTML(): string {
   <style>
     :root {
       --bg-dark: #07090e;
-      --bg-card: rgba(15, 23, 42, 0.75);
-      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --bg-card: rgba(15, 23, 42, 0.8);
       --border-color: rgba(255, 255, 255, 0.1);
-      --border-accent: rgba(99, 102, 241, 0.3);
+      --border-accent: rgba(99, 102, 241, 0.4);
       --primary: #6366f1;
       --primary-glow: rgba(99, 102, 241, 0.4);
       --secondary: #06b6d4;
@@ -32,391 +31,112 @@ export function renderDashboardHTML(): string {
       --font-code: 'JetBrains Mono', monospace;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: var(--font-body);
       line-height: 1.6;
-      overflow-x: hidden;
       background-image: 
         radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 40%);
       background-attachment: fixed;
     }
 
-    /* Header Navigation */
     header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(16px);
-      background: rgba(7, 9, 14, 0.8);
+      background: rgba(7, 9, 14, 0.85);
       border-bottom: 1px solid var(--border-color);
       padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
     }
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-    }
-
+    .logo-container { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
     .logo-icon {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-heading);
-      font-weight: 800;
-      font-size: 1.25rem;
-      color: white;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 800; font-size: 1.25rem; color: white;
       box-shadow: 0 0 15px var(--primary-glow);
     }
 
     .logo-text {
-      font-family: var(--font-heading);
-      font-weight: 800;
-      font-size: 1.4rem;
+      font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem;
       background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
     .nav-badge {
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      color: #818cf8;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #818cf8; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 20px;
     }
 
     .btn-github {
-      background: linear-gradient(135deg, #4f46e5, #06b6d4);
-      color: white;
-      font-weight: 600;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; font-weight: 600;
+      padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;
     }
 
-    .btn-github:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-    }
+    .container { max-width: 1380px; margin: 0 auto; padding: 3rem 1.5rem; }
 
-    /* Container & Layout */
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem;
-    }
-
-    /* Hero Section */
-    .hero {
-      text-align: center;
-      max-width: 900px;
-      margin: 0 auto 4rem auto;
-    }
-
+    .hero { text-align: center; max-width: 900px; margin: 0 auto 3rem auto; }
     .hero-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #34d399;
-      font-size: 0.875rem;
-      font-weight: 500;
-      padding: 0.4rem 1rem;
-      border-radius: 30px;
-      margin-bottom: 1.5rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399; font-size: 0.875rem; font-weight: 500; padding: 0.4rem 1rem; border-radius: 30px; margin-bottom: 1.5rem;
     }
 
-    .hero h1 {
-      font-family: var(--font-heading);
-      font-size: 3.5rem;
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 1.25rem;
-      letter-spacing: -1px;
-    }
+    .hero h1 { font-family: var(--font-heading); font-size: 3.25rem; font-weight: 800; line-height: 1.1; margin-bottom: 1rem; }
+    .hero h1 span { background: linear-gradient(135deg, #818cf8 0%, #38bdf8 50%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    .hero h1 span {
-      background: linear-gradient(135deg, #818cf8 0%, #38bdf8 50%, #34d399 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .section-title { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
 
-    .hero p {
-      font-size: 1.2rem;
-      color: var(--text-muted);
-      max-width: 750px;
-      margin: 0 auto 2rem auto;
+    /* Monaco Diff Container */
+    .diff-wrapper {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 3rem;
     }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 4rem;
+    .diff-header {
+      background: rgba(15, 23, 42, 0.95); padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600;
     }
-
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      backdrop-filter: blur(12px);
-      transition: all 0.2s ease;
-    }
-
-    .stat-card:hover {
-      border-color: var(--border-accent);
-      transform: translateY(-2px);
-    }
-
-    .stat-number {
-      font-family: var(--font-heading);
-      font-size: 2.25rem;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
-    }
-
-    .stat-number.gradient {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    /* Interactive Playground Section */
-    .section-title {
-      font-family: var(--font-heading);
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .playground-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 4rem;
-    }
-
-    @media (max-width: 900px) {
-      .playground-grid {
-        grid-template-columns: 1fr;
-      }
-      .hero h1 {
-        font-size: 2.5rem;
-      }
-    }
-
-    .editor-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 480px;
-    }
-
-    .editor-header {
-      background: rgba(15, 23, 42, 0.9);
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .editor-lang {
-      color: var(--primary);
-      font-family: var(--font-code);
-      font-size: 0.75rem;
-      background: rgba(99, 102, 241, 0.1);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    textarea.editor-input {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      border: none;
-      color: #e2e8f0;
-      font-family: var(--font-code);
-      font-size: 0.9rem;
-      padding: 1.25rem;
-      resize: none;
-      outline: none;
-      line-height: 1.6;
-    }
-
-    .editor-output {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      color: #34d399;
-      font-family: var(--font-code);
-      font-size: 0.9rem;
-      padding: 1.25rem;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      line-height: 1.6;
-    }
-
-    .playground-actions {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      align-items: center;
-    }
+    #monaco-diff-container { width: 100%; height: 480px; }
 
     .btn-run {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      font-weight: 600;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+      background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 600;
+      padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-run:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+
+    /* Fleet Manager & Queue Grid */
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    .card-panel {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;
     }
 
-    .btn-run:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
+    .table-custom { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
+    .table-custom th, .table-custom td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .table-custom th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
 
-    /* Monitored Vendors Grid */
-    .vendors-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 4rem;
-    }
+    .badge-status { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block; }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 
-    .vendor-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
-    }
-
-    .vendor-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .vendor-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .vendor-name {
-      font-weight: 600;
-      font-size: 1rem;
-    }
-
-    .vendor-version {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.1);
-      padding: 0.25rem 0.6rem;
-      border-radius: 20px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background-color: #10b981;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
-    }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border-color);
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
+    footer { border-top: 1px solid var(--border-color); padding: 2.5rem 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
   </style>
+
+  <!-- Load Monaco Editor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 </head>
 <body>
 
-  <!-- Navigation -->
   <header>
     <a href="#" class="logo-container">
       <div class="logo-icon">A</div>
       <div class="logo-text">APIShift</div>
-      <span class="nav-badge">Enterprise Edition</span>
+      <span class="nav-badge">Fleet & Monaco Edition</span>
     </a>
     <a href="https://github.com/TurboRx/APIShift-Bot" target="_blank" class="btn-github">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
@@ -425,56 +145,111 @@ export function renderDashboardHTML(): string {
   </header>
 
   <div class="container">
-    <!-- Hero Section -->
     <section class="hero">
       <div class="hero-pill">
-        <span>✨ Automated Self-Maintaining APIs</span>
+        <span>✨ Self-Maintaining API Platform</span>
       </div>
       <h1>Dependabot for <span>API Code Usages</span></h1>
-      <p>When API providers ship breaking changes, APIShift automatically scans customer codebases, performs zero-AI-cost deterministic AST refactoring, and opens ready-to-merge Pull Requests.</p>
+      <p>Continuous OpenAPI spec diffing, zero-token-cost Babel AST refactoring, multi-repository fleet management, and automated GitHub Pull Request generation.</p>
     </section>
 
-    <!-- Key Metrics Grid -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number gradient">$0.00</div>
-        <div class="stat-label">AI Token Cost per Deterministic AST Transform</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">100%</div>
-        <div class="stat-label">Deterministic AST Code Safety & Verification</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">24+</div>
-        <div class="stat-label">OpenAPI 3.1 & Swagger 2.0 Spec Test Suites</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number gradient">&lt; 50ms</div>
-        <div class="stat-label">Babel AST Refactoring Execution Latency</div>
-      </div>
-    </div>
-
-    <!-- Live Interactive Playground -->
+    <!-- Monaco Diff Viewer Section -->
     <h2 class="section-title">
-      <span>⚡ Live AST Migration Workbench</span>
+      <span>🎨 Monaco Visual Diff Editor</span>
     </h2>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Test deterministic AST refactoring live. APIShift updates property names, method calls, template strings, TypeScript types, and React JSX props.</p>
-
-    <div class="playground-actions">
-      <button class="btn-run" id="run-btn" onclick="runRefactor()">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <span style="color: var(--text-muted); font-size: 0.9rem;" id="diff-status">Rule: card ➔ payment_method | /v1/charges ➔ /v1/payment_intents</span>
+      <button class="btn-run" onclick="runMonacoRefactor()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        Execute AST Transformation
+        Re-Run AST Transformation
       </button>
-      <span style="color: var(--text-muted); font-size: 0.85rem;" id="ast-status">Rule: card ➔ payment_method | /v1/charges ➔ /v1/payment_intents</span>
     </div>
 
-    <div class="playground-grid">
-      <div class="editor-card">
-        <div class="editor-header">
-          <span>SOURCE CODE (Before Migration)</span>
-          <span class="editor-lang">TypeScript / JSX</span>
-        </div>
-        <textarea class="editor-input" id="input-code">import stripe from 'stripe';
+    <div class="diff-wrapper">
+      <div class="diff-header">
+        <span>ORIGINAL SOURCE CODE</span>
+        <span style="color: #34d399;">REFACTORED AST CODE</span>
+      </div>
+      <div id="monaco-diff-container"></div>
+    </div>
+
+    <!-- Fleet Manager & Webhook Queue Grid -->
+    <div class="grid-2col">
+      <!-- Fleet Manager Panel -->
+      <div class="card-panel">
+        <h2 class="section-title" style="font-size: 1.4rem;">
+          <span>🌐 Fleet Migration Manager</span>
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Batch dispatch refactoring PRs across microservice repositories.</p>
+        <table class="table-custom">
+          <thead>
+            <tr><th>Repository</th><th>Branch</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>org/billing-service</code></td>
+              <td>main</td>
+              <td><span class="badge-status badge-success">PR #42 Created</span></td>
+              <td><a href="#" style="color: var(--primary);">View PR</a></td>
+            </tr>
+            <tr>
+              <td><code>org/auth-api</code></td>
+              <td>main</td>
+              <td><span class="badge-status badge-success">PR #18 Created</span></td>
+              <td><a href="#" style="color: var(--primary);">View PR</a></td>
+            </tr>
+            <tr>
+              <td><code>org/checkout-web</code></td>
+              <td>main</td>
+              <td><span class="badge-status badge-pending">Queued</span></td>
+              <td><a href="#" style="color: var(--text-muted);">Syncing</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Webhook Delivery Queue Monitor Panel -->
+      <div class="card-panel">
+        <h2 class="section-title" style="font-size: 1.4rem;">
+          <span>🔄 Webhook Queue & Retry Monitor</span>
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Live background job queue status & exponential backoff retries.</p>
+        <table class="table-custom">
+          <thead>
+            <tr><th>Job ID</th><th>Event</th><th>Attempts</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>job_10492_a2</code></td>
+              <td>repository_dispatch</td>
+              <td>1/3</td>
+              <td><span class="badge-status badge-success">Completed</span></td>
+            </tr>
+            <tr>
+              <td><code>job_10493_b4</code></td>
+              <td>check_suite</td>
+              <td>1/3</td>
+              <td><span class="badge-status badge-success">Completed</span></td>
+            </tr>
+            <tr>
+              <td><code>job_10494_c8</code></td>
+              <td>push</td>
+              <td>0/3</td>
+              <td><span class="badge-status badge-pending">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 APIShift Platform — Self-Maintaining APIs for Engineering Teams. Powered by Microsoft Monaco Editor & Cloudflare Worker Edge Engine.</p>
+  </footer>
+
+  <script>
+    let diffEditor;
+    const initialOriginalCode = \`import stripe from 'stripe';
 
 interface ChargeParams {
   amount: number;
@@ -486,82 +261,45 @@ export async function processPayment(card: string) {
     amount: 5000,
     card,
   });
-  const endpoint = \`/v1/charges/\${result.id}\`;
+  const endpoint = \\\`/v1/charges/\${result.id}\\\`;
   return fetch(endpoint);
-}</textarea>
-      </div>
+}\`;
 
-      <div class="editor-card">
-        <div class="editor-header">
-          <span>REFACTORED CODE (Output)</span>
-          <span class="editor-lang" style="color: #34d399; background: rgba(16, 185, 129, 0.1);">100% Deterministic AST</span>
-        </div>
-        <div class="editor-output" id="output-code">// Click "Execute AST Transformation" to view live refactored code</div>
-      </div>
-    </div>
+    const initialModifiedCode = \`import stripe from 'stripe';
 
-    <!-- Tracked Vendor API Status -->
-    <h2 class="section-title" style="margin-top: 2rem;">
-      <span>🌐 Monitored API Vendor Specs</span>
-    </h2>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">APIShift continuously monitors upstream OpenAPI specifications for breaking changes.</p>
+interface ChargeParams {
+  amount: number;
+  payment_method: string;
+}
 
-    <div class="vendors-grid">
-      <div class="vendor-card">
-        <div class="vendor-info">
-          <div class="vendor-icon" style="color: #6366f1;">S</div>
-          <div>
-            <div class="vendor-name">Stripe API</div>
-            <div class="vendor-version">v2026-08-01 • OpenAPI 3.1</div>
-          </div>
-        </div>
-        <div class="status-badge"><div class="status-dot"></div> Active</div>
-      </div>
+export async function processPayment(card: string) {
+  const result = await stripe.paymentIntents.create({
+    amount: 5000,
+    payment_method: card
+  });
+  const endpoint = \\\`/v1/payment_intents/\${result.id}\\\`;
+  return fetch(endpoint);
+}\`;
 
-      <div class="vendor-card">
-        <div class="vendor-info">
-          <div class="vendor-icon" style="color: #06b6d4;">T</div>
-          <div>
-            <div class="vendor-name">Twilio REST API</div>
-            <div class="vendor-version">v2026.4.0 • OpenAPI 3.0</div>
-          </div>
-        </div>
-        <div class="status-badge"><div class="status-dot"></div> Active</div>
-      </div>
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+      diffEditor = monaco.editor.createDiffEditor(document.getElementById('monaco-diff-container'), {
+        theme: 'vs-dark',
+        readOnly: false,
+        renderSideBySide: true,
+        automaticLayout: true
+      });
 
-      <div class="vendor-card">
-        <div class="vendor-info">
-          <div class="vendor-icon" style="color: #10b981;">O</div>
-          <div>
-            <div class="vendor-name">OpenAI API</div>
-            <div class="vendor-version">v2.1.0 • OpenAPI 3.1</div>
-          </div>
-        </div>
-        <div class="status-badge"><div class="status-dot"></div> Active</div>
-      </div>
+      diffEditor.setModel({
+        original: monaco.editor.createModel(initialOriginalCode, 'typescript'),
+        modified: monaco.editor.createModel(initialModifiedCode, 'typescript')
+      });
+    });
 
-      <div class="vendor-card">
-        <div class="vendor-info">
-          <div class="vendor-icon" style="color: #f43f5e;">R</div>
-          <div>
-            <div class="vendor-name">Resend API</div>
-            <div class="vendor-version">v1.8.0 • OpenAPI 3.0</div>
-          </div>
-        </div>
-        <div class="status-badge"><div class="status-dot"></div> Active</div>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    <p>© 2026 APIShift Bot — Self-Maintaining APIs for Engineering Teams. Zero AI Token Cost Deterministic Code Migration Engine.</p>
-  </footer>
-
-  <script>
-    async function runRefactor() {
-      const code = document.getElementById('input-code').value;
-      const statusEl = document.getElementById('ast-status');
-      statusEl.innerText = 'Refactoring AST...';
+    async function runMonacoRefactor() {
+      if (!diffEditor) return;
+      const code = diffEditor.getModel().original.getValue();
+      document.getElementById('diff-status').innerText = 'Refactoring AST...';
 
       try {
         const response = await fetch('/api/refactor', {
@@ -569,29 +307,20 @@ export async function processPayment(card: string) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             code,
-            renames: [
-              { oldName: 'card', newName: 'payment_method' }
-            ],
-            endpointUpdates: [
-              { oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }
-            ]
+            renames: [{ oldName: 'card', newName: 'payment_method' }],
+            endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }]
           })
         });
 
         const data = await response.json();
         if (data.code) {
-          document.getElementById('output-code').textContent = data.code;
-          statusEl.innerText = '✅ Applied ' + data.modifiedCount + ' AST refactorings in < 15ms!';
-        } else {
-          document.getElementById('output-code').textContent = 'Error: ' + JSON.stringify(data);
+          diffEditor.getModel().modified.setValue(data.code);
+          document.getElementById('diff-status').innerText = '✅ Applied ' + data.modifiedCount + ' AST refactorings in < 15ms!';
         }
       } catch (err) {
-        document.getElementById('output-code').textContent = '// Error executing AST refactor: ' + err;
+        document.getElementById('diff-status').innerText = 'Error refactoring: ' + err;
       }
     }
-
-    // Auto-run on initial load
-    window.addEventListener('DOMContentLoaded', runRefactor);
   </script>
 </body>
 </html>`;
