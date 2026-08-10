@@ -1,4 +1,4 @@
-import { parse } from '@babel/parser';
+import { parse, type ParserPlugin } from '@babel/parser';
 import traverseModule from '@babel/traverse';
 import generatorModule from '@babel/generator';
 import * as t from '@babel/types';
@@ -30,21 +30,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
   const isTS = filename.endsWith('.ts') || filename.endsWith('.tsx');
   const isJSX = filename.endsWith('.jsx') || filename.endsWith('.tsx') || code.includes('<');
 
-  const plugins: Array<
-    | 'asyncGenerators'
-    | 'classProperties'
-    | 'decorators-legacy'
-    | 'dynamicImport'
-    | 'objectRestSpread'
-    | 'typescript'
-    | 'jsx'
-  > = [
-    'asyncGenerators',
-    'classProperties',
-    'decorators-legacy',
-    'dynamicImport',
-    'objectRestSpread',
-  ];
+  const plugins: ParserPlugin[] = ['decorators-legacy'];
 
   if (isTS) plugins.push('typescript');
   if (isJSX) plugins.push('jsx');
