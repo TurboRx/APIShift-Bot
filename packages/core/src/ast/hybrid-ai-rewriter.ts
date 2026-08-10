@@ -77,7 +77,7 @@ async function invokeAIProvider(
           {
             role: 'system',
             content:
-              'You are an expert TypeScript refactoring assistant. Return ONLY the transformed code.',
+              'You are an expert TypeScript refactoring assistant. Return ONLY the transformed code without explanation.',
           },
           { role: 'user', content: prompt },
         ],
@@ -89,13 +89,66 @@ async function invokeAIProvider(
       const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
       const content = data.choices?.[0]?.message?.content;
       if (content) {
-        return content
-          .replace(/^```[a-z]*\n/i, '')
-          .replace(/\n```$/i, '')
-          .trim();
+        return stripMarkdownCodeFences(content);
+      }
+    }
+  }
+
+  if (provider === 'anthropic' && options.apiKey) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': options.apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: options.model || 'claude-3-5-sonnet-20241022',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as { content?: Array<{ text?: string }> };
+      const content = data.content?.[0]?.text;
+      if (content) {
+        return stripMarkdownCodeFences(content);
+      }
+    }
+  }
+
+  if (provider === 'gemini' && options.apiKey) {
+    const model = options.model || 'gemini-1.5-flash';
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${options.apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    if (res.ok) {
+      const data = (await res.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content) {
+        return stripMarkdownCodeFences(content);
       }
     }
   }
 
   return code;
+}
+
+function stripMarkdownCodeFences(text: string): string {
+  return text
+    .replace(/^```[a-z]*\n/im, '')
+    .replace(/\n```$/im, '')
+    .replace(/```/g, '')
+    .trim();
 }
