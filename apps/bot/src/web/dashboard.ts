@@ -772,8 +772,7 @@ export function renderDashboardHTML(): string {
 
       async function checkSpecWatcher() {
         const btn = document.getElementById('btn-sync-watcher');
-        if (btn) btn.innerHTML = 'Syncing...';er');
-        if (btn) btn.innerHTML = '⏳ Syncing...';
+        if (btn) btn.innerHTML = 'Syncing...';
         try {
           const res = await fetch('/api/cron/spec-watcher');
           const data = await res.json();
