@@ -214,13 +214,12 @@ export function renderDashboardHTML(): string {
       background: rgba(15, 23, 42, 0.6); padding: 0.65rem 1rem; border-radius: 8px; border: 1px solid var(--border-color);
       font-size: 0.8rem; color: var(--text-muted);
     }
-    .metric-pill { font-weight: 600; color: #34d399; }
-
-    /* Grids & Responsiveness */
-    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .metric-pill { font-weight: 600; color: #34d399; }    /* Grids & Responsiveness */
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; width: 100%; }
+    .grid-2col > *, .differ-grid > * { min-width: 0; }
     
     .table-responsive {
-      width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
       border-radius: 8px; border: 1px solid var(--border-color); margin-top: 0.5rem;
     }
     .table-custom { width: 100%; border-collapse: collapse; font-size: 0.825rem; min-width: 480px; }
@@ -232,13 +231,14 @@ export function renderDashboardHTML(): string {
     .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
     .badge-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1rem; width: 100%; }
+    .stats-row > * { min-width: 0; }
     .stat-box { background: rgba(8, 11, 17, 0.7); border: 1px solid var(--border-color); padding: 0.65rem 0.4rem; border-radius: 8px; text-align: center; }
     .stat-val { font-size: 1.25rem; font-weight: 700; color: #38bdf8; font-family: var(--font-heading); }
     .stat-lbl { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 
     /* Interactive Schema Differ UI */
-    .differ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .differ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; width: 100%; }
     .differ-textarea {
       width: 100%; height: 200px; background: rgba(8, 11, 17, 0.9); border: 1px solid var(--border-color);
       border-radius: 8px; color: #f8fafc; font-family: var(--font-code); font-size: 14px; padding: 0.75rem;
@@ -254,7 +254,11 @@ export function renderDashboardHTML(): string {
 
     footer { border-top: 1px solid var(--border-color); padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem; }
 
-    /* Desktop Breakpoints (>= 768px) */
+    /* Responsive Breakpoints */
+    @media (max-width: 1024px) {
+      .grid-2col, .differ-grid { grid-template-columns: 1fr; }
+    }
+
     @media (min-width: 768px) {
       .workbench-toolbar { flex-direction: row; align-items: center; justify-content: space-between; padding: 0.85rem 1.1rem; }
       .rule-input-group { grid-template-columns: 1.8fr 1fr auto 1fr; align-items: center; max-width: 680px; }
@@ -266,7 +270,6 @@ export function renderDashboardHTML(): string {
     @media (max-width: 767px) {
       header { flex-wrap: wrap; }
       .nav-badge { display: none; }
-      .grid-2col, .differ-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .diff-header { font-size: 0.7rem; }
     }
@@ -291,7 +294,7 @@ export function renderDashboardHTML(): string {
 
   <div class="container">
     <section class="hero">
-      <span class="hero-tag">✨ Deterministic AST Engine & Hybrid AI Fallback</span>
+      <span class="hero-tag">Deterministic AST Engine & Hybrid AI Fallback</span>
       <h1>Self-Maintaining APIs for Engineering Teams</h1>
       <p>Continuous OpenAPI spec diffing, zero-token-cost Babel AST code refactoring, multi-repository fleet management, and automated GitHub Pull Request generation.</p>
     </section>
@@ -299,10 +302,10 @@ export function renderDashboardHTML(): string {
     <!-- Navigation Tabs -->
     <div class="tab-nav-wrapper">
       <div class="tab-nav" id="tab-nav-container">
-        <button class="tab-btn active" data-tab="workbench">🎨 AST Rewriter Workbench</button>
-        <button class="tab-btn" data-tab="differ">🔍 OpenAPI Schema Differ</button>
-        <button class="tab-btn" data-tab="watcher">📡 Vendor Spec Watcher</button>
-        <button class="tab-btn" data-tab="fleet">🌐 Fleet & Webhooks</button>
+        <button class="tab-btn active" data-tab="workbench">AST Rewriter Workbench</button>
+        <button class="tab-btn" data-tab="differ">OpenAPI Schema Differ</button>
+        <button class="tab-btn" data-tab="watcher">Vendor Spec Watcher</button>
+        <button class="tab-btn" data-tab="fleet">Fleet & Webhooks</button>
       </div>
     </div>
 
@@ -310,8 +313,8 @@ export function renderDashboardHTML(): string {
     <div id="tab-workbench" class="tab-content active">
       <div class="card-panel">
         <div class="section-title">
-          <span>🎨 Monaco Visual AST Refactor Workbench</span>
-          <span style="font-size: 0.775rem; font-weight: 500; color: #34d399;" id="status-badge">⚡ Deterministic AST Ready</span>
+          <span>Monaco Visual AST Refactor Workbench</span>
+          <span style="font-size: 0.775rem; font-weight: 500; color: #34d399;" id="status-badge">Deterministic AST Ready</span>
         </div>
         <p class="section-subtitle">Interactively test zero-token Babel AST transformations with customizable rename rules and endpoint paths.</p>
 
@@ -356,7 +359,7 @@ export function renderDashboardHTML(): string {
     <div id="tab-differ" class="tab-content">
       <div class="card-panel">
         <div class="section-title">
-          <span>🔍 Interactive OpenAPI Schema Differ</span>
+          <span>Interactive OpenAPI Schema Differ</span>
           <button id="btn-run-diff" class="btn-primary" style="min-height: 38px; padding: 0.45rem 1rem;">Compare Specs</button>
         </div>
         <p class="section-subtitle">Paste two OpenAPI/Swagger specification JSON objects to automatically generate breaking change matrices and rename rules.</p>
@@ -402,7 +405,7 @@ export function renderDashboardHTML(): string {
     <div id="tab-watcher" class="tab-content">
       <div class="card-panel">
         <div class="section-title">
-          <span>📡 Tracked Vendor OpenAPI Specifications</span>
+          <span>Tracked Vendor OpenAPI Specifications</span>
           <button id="btn-sync-watcher" class="btn-secondary" style="font-size: 0.8rem; min-height: 36px; padding: 0.4rem 0.8rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             <span>Sync Specs Now</span>
@@ -449,13 +452,13 @@ export function renderDashboardHTML(): string {
         <!-- Fleet Manager Panel -->
         <div class="card-panel">
           <div class="section-title">
-            <span>🌐 Fleet Refactor Manager</span>
+            <span>Fleet Refactor Manager</span>
           </div>
           <p class="section-subtitle">Batch dispatch refactoring Pull Requests across microservice repositories.</p>
 
-          <form id="fleet-form" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-            <input type="text" id="fleet-repo-input" class="input-custom" placeholder="owner/repo (e.g. org/billing-service)" value="org/billing-service" style="flex: 1; min-width: 180px;" required />
-            <button type="submit" class="btn-primary" style="min-height: 42px;">Dispatch PR</button>
+          <form id="fleet-form" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; width: 100%;">
+            <input type="text" id="fleet-repo-input" class="input-custom" placeholder="owner/repo (e.g. org/billing-service)" value="org/billing-service" style="flex: 1; min-width: 0;" required />
+            <button type="submit" class="btn-primary" style="min-height: 42px; white-space: nowrap;">Dispatch PR</button>
           </form>
 
           <div class="table-responsive">
@@ -482,7 +485,7 @@ export function renderDashboardHTML(): string {
         <!-- Webhook Delivery Queue Monitor Panel -->
         <div class="card-panel">
           <div class="section-title">
-            <span>🔄 Webhook Queue Monitor</span>
+            <span>Webhook Queue Monitor</span>
             <button id="btn-test-webhook" class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; min-height: 32px;">+ Test Event</button>
           </div>
           <p class="section-subtitle">Live webhook queue status & exponential backoff retry stats.</p>
@@ -692,7 +695,7 @@ export function renderDashboardHTML(): string {
         const preset = PRESETS[presetKey] || PRESETS.stripe;
 
         const metricsStatus = document.getElementById('metrics-status');
-        if (metricsStatus) metricsStatus.innerText = '⏳ Executing Babel AST rewrite...';
+        if (metricsStatus) metricsStatus.innerText = 'Executing Babel AST rewrite...';
 
         const startTime = performance.now();
 
@@ -713,11 +716,11 @@ export function renderDashboardHTML(): string {
 
           if (data.code) {
             diffEditor.getModel().modified.setValue(data.code);
-            if (metricsStatus) metricsStatus.innerText = '✅ Applied ' + (data.modifiedCount || 1) + ' AST change(s)';
+            if (metricsStatus) metricsStatus.innerText = 'Applied ' + (data.modifiedCount || 1) + ' AST change(s)';
             const metricsLatency = document.getElementById('metrics-latency');
             if (metricsLatency) metricsLatency.innerText = duration + ' ms';
           } else {
-            if (metricsStatus) metricsStatus.innerText = '⚠️ Code processed (' + duration + ' ms)';
+            if (metricsStatus) metricsStatus.innerText = 'Code processed (' + duration + ' ms)';
           }
         } catch (err) {
           if (metricsStatus) metricsStatus.innerText = 'Error processing AST: ' + err;
@@ -748,7 +751,7 @@ export function renderDashboardHTML(): string {
         const newVal = document.getElementById('spec-new')?.value || '';
         const resultBox = document.getElementById('differ-result');
 
-        if (resultBox) resultBox.innerText = '⏳ Analyzing OpenAPI schemas via /api/diff...';
+        if (resultBox) resultBox.innerText = 'Analyzing OpenAPI schemas via /api/diff...';
         try {
           const oldSpec = JSON.parse(oldVal);
           const newSpec = JSON.parse(newVal);
@@ -769,6 +772,7 @@ export function renderDashboardHTML(): string {
 
       async function checkSpecWatcher() {
         const btn = document.getElementById('btn-sync-watcher');
+        if (btn) btn.innerHTML = 'Syncing...';er');
         if (btn) btn.innerHTML = '⏳ Syncing...';
         try {
           const res = await fetch('/api/cron/spec-watcher');

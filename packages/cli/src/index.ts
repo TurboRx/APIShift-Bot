@@ -34,7 +34,7 @@ export async function runCLI(): Promise<void> {
     .action(async (oldSpecPath: string, newSpecPath: string, options: { output?: string }) => {
       try {
         console.log(
-          chalk.blue(`🔍 Comparing OpenAPI specs:\n  Old: ${oldSpecPath}\n  New: ${newSpecPath}\n`)
+          chalk.blue(`Comparing OpenAPI specs:\n  Old: ${oldSpecPath}\n  New: ${newSpecPath}\n`)
         );
         const oldContent = fs.readFileSync(path.resolve(oldSpecPath), 'utf-8');
         const newContent = fs.readFileSync(path.resolve(newSpecPath), 'utf-8');
@@ -48,11 +48,11 @@ export async function runCLI(): Promise<void> {
         }
 
         if (!result.hasBreakingChanges) {
-          console.log(chalk.green('✅ No breaking changes detected!'));
+          console.log(chalk.green('No breaking changes detected!'));
           return;
         }
 
-        console.log(chalk.yellow(`🚨 ${result.summary}\n`));
+        console.log(chalk.yellow(`[Breaking Changes] ${result.summary}\n`));
         console.log(chalk.bold('Breaking Changes:'));
         result.breakingChanges.forEach((bc: BreakingChange, idx: number) => {
           console.log(chalk.red(`  ${idx + 1}. [${bc.type}] ${bc.description}`));
@@ -112,14 +112,14 @@ export async function runCLI(): Promise<void> {
           }
         }
 
-        console.log(chalk.blue(`⚡ Running Babel AST rewriter on ${filePath}...`));
+        console.log(chalk.blue(`Running Babel AST rewriter on ${filePath}...`));
         const result = rewriteAST(sourceCode, { renames, endpointUpdates, filename: filePath });
 
         if (result.hasChanges) {
           fs.writeFileSync(filePath, result.code, 'utf-8');
           console.log(
             chalk.green(
-              `✅ Successfully updated ${filePath}! (${result.modifiedCount} changes applied)`
+              `Successfully updated ${filePath}! (${result.modifiedCount} changes applied)`
             )
           );
         } else {
@@ -143,10 +143,10 @@ export async function runCLI(): Promise<void> {
         console.error(chalk.red(`Configuration file not found: ${configPath}`));
         process.exit(1);
       }
-      console.log(chalk.blue(`👀 APIShift Watcher active for configuration: ${configPath}`));
+      console.log(chalk.blue(`APIShift Watcher active for configuration: ${configPath}`));
       console.log(
         chalk.green(
-          '✅ Monitoring local files and upstream OpenAPI specifications for breaking changes...'
+          'Monitoring local files and upstream OpenAPI specifications for breaking changes...'
         )
       );
     });
