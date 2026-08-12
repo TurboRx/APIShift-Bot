@@ -1,13 +1,13 @@
 # APIShift Bot 🚀
 
-> **Self-Maintaining APIs for Engineering Teams — Dependabot for API Code Usages.**
+> **Self-Maintaining APIs for Engineering Teams — Autonomous API Migration Engine.**
 > Automatically detect breaking API changes, diff OpenAPI/Swagger specifications, and open automated code refactoring Pull Requests with $0.00 AI token cost deterministic AST transformations and Hybrid AI fallback.
 
 ---
 
 ## 🌟 The Vision: Self-Maintaining APIs
 
-> _"API providers shouldn't just announce breaking changes; they should apply them. Dependabot updates dependency versions in `package.json`, but it doesn't fix broken code usage when APIs evolve."_
+> _"API providers shouldn't just announce breaking changes; they should apply them. Updating dependency versions in package files doesn't fix broken code usage when APIs evolve."_
 
 APIShift fills the missing application layer connecting API vendors (Stripe, Twilio, OpenAI, Resend, Supabase) directly to customer codebases:
 
