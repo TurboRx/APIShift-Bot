@@ -158,4 +158,32 @@ interface CreateChargeRequest {
     expect(result.modifiedCount).toBe(0);
     expect(result.code).toBe(inputCode);
   });
+
+  it('renames direct function call to dot-notation method call (e.g. sendEmail -> emails.send)', () => {
+    const inputCode = `
+async function sendWelcome(to: string) {
+  return await resend.sendEmail({
+    to: to,
+    subject: 'Welcome',
+  });
+}
+`;
+
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'to', newName: 'recipients' }],
+      endpointUpdates: [
+        {
+          oldPath: '/emails',
+          newPath: '/v2/emails',
+          oldFunctionName: 'sendEmail',
+          newFunctionName: 'emails.send',
+        },
+      ],
+      filename: 'email.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('resend.emails.send');
+    expect(result.code).toContain('recipients: to');
+  });
 });

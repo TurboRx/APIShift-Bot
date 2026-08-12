@@ -1,5 +1,5 @@
 import { parse, type ParserPlugin } from '@babel/parser';
-import traverseModule from '@babel/traverse';
+import traverseModule, { type NodePath } from '@babel/traverse';
 import generatorModule from '@babel/generator';
 import * as t from '@babel/types';
 import type { ASTTransformOptions, ASTTransformResult } from '../types/index.js';
@@ -48,8 +48,8 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 
   traverse(ast, {
     // 1. Rewrite Object Properties (e.g., { card: token } -> { payment_method: token })
-    ObjectProperty(path: any) {
-      const node = path.node as t.ObjectProperty;
+    ObjectProperty(path: NodePath<t.ObjectProperty>) {
+      const node = path.node;
       const keyName = t.isIdentifier(node.key)
         ? node.key.name
         : t.isStringLiteral(node.key)
@@ -61,7 +61,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       for (const rule of renames) {
         if (keyName === rule.oldName) {
           // Check target object scope if specified
-          if (rule.targetObject && !isWithinTargetCall(path, rule.targetObject)) {
+          if (rule.targetObject && !isWithinTargetCall(path, rule.targetObject, endpointUpdates)) {
             continue;
           }
 
@@ -86,13 +86,21 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     },
 
     // 2. Rewrite Member Expressions & Function Calls (e.g. stripe.charges.create -> stripe.paymentIntents.create)
-    MemberExpression(path: any) {
-      const node = path.node as t.MemberExpression;
+    MemberExpression(path: NodePath<t.MemberExpression>) {
+      const node = path.node;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldFunctionName && epRule.newFunctionName) {
           if (t.isIdentifier(node.property) && node.property.name === epRule.oldFunctionName) {
-            node.property.name = epRule.newFunctionName;
+            if (epRule.newFunctionName.includes('.')) {
+              const parts = epRule.newFunctionName.split('.');
+              if (parts.length === 2 && parts[0] && parts[1]) {
+                node.object = t.memberExpression(node.object, t.identifier(parts[0]));
+                node.property = t.identifier(parts[1]);
+              }
+            } else {
+              node.property.name = epRule.newFunctionName;
+            }
             modifiedCount++;
             appliedRulesSet.add(
               `FunctionRename:${epRule.oldFunctionName}->${epRule.newFunctionName}`
@@ -103,9 +111,37 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       }
     },
 
-    // 3. Rewrite String Literals (e.g. fetch('/v1/charges') -> fetch('/v1/payment_intents'))
-    StringLiteral(path: any) {
-      const node = path.node as t.StringLiteral;
+    // 3. Rewrite Direct CallExpressions (e.g. resend.sendEmail(...) -> resend.emails.send(...))
+    CallExpression(path: NodePath<t.CallExpression>) {
+      const callee = path.node.callee;
+
+      for (const epRule of endpointUpdates) {
+        if (epRule.oldFunctionName && epRule.newFunctionName) {
+          if (t.isIdentifier(callee) && callee.name === epRule.oldFunctionName) {
+            if (epRule.newFunctionName.includes('.')) {
+              const parts = epRule.newFunctionName.split('.');
+              if (parts.length === 2 && parts[0] && parts[1]) {
+                path.node.callee = t.memberExpression(
+                  t.identifier(parts[0]),
+                  t.identifier(parts[1])
+                );
+              }
+            } else {
+              callee.name = epRule.newFunctionName;
+            }
+            modifiedCount++;
+            appliedRulesSet.add(
+              `FunctionRename:${epRule.oldFunctionName}->${epRule.newFunctionName}`
+            );
+            break;
+          }
+        }
+      }
+    },
+
+    // 4. Rewrite String Literals (e.g. fetch('/v1/charges') -> fetch('/v1/payment_intents'))
+    StringLiteral(path: NodePath<t.StringLiteral>) {
+      const node = path.node;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldPath && epRule.newPath) {
@@ -118,9 +154,9 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       }
     },
 
-    // 4. Rewrite Template Literals containing endpoint paths
-    TemplateLiteral(path: any) {
-      const node = path.node as t.TemplateLiteral;
+    // 5. Rewrite Template Literals containing endpoint paths
+    TemplateLiteral(path: NodePath<t.TemplateLiteral>) {
+      const node = path.node;
 
       for (const epRule of endpointUpdates) {
         if (epRule.oldPath && epRule.newPath) {
@@ -141,9 +177,9 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       }
     },
 
-    // 5. Rewrite TypeScript Type Property Signatures (e.g., interface Params { card: string })
-    TSPropertySignature(path: any) {
-      const node = path.node as t.TSPropertySignature;
+    // 6. Rewrite TypeScript Type Property Signatures (e.g., interface Params { card: string })
+    TSPropertySignature(path: NodePath<t.TSPropertySignature>) {
+      const node = path.node;
       const keyName = t.isIdentifier(node.key)
         ? node.key.name
         : t.isStringLiteral(node.key)
@@ -166,9 +202,9 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
       }
     },
 
-    // 6. Rewrite JSX Attributes (e.g. <PaymentForm card={tok} /> -> <PaymentForm payment_method={tok} />)
-    JSXAttribute(path: any) {
-      const node = path.node as t.JSXAttribute;
+    // 7. Rewrite JSX Attributes (e.g. <PaymentForm card={tok} /> -> <PaymentForm payment_method={tok} />)
+    JSXAttribute(path: NodePath<t.JSXAttribute>) {
+      const node = path.node;
       if (t.isJSXIdentifier(node.name)) {
         const attrName = node.name.name;
         for (const rule of renames) {
@@ -199,14 +235,33 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
 /**
  * Helper to check if an AST path is inside a target function/method call
  */
-function isWithinTargetCall(path: any, targetCall: string): boolean {
-  let current: any = path.parentPath;
+function isWithinTargetCall(
+  path: NodePath,
+  targetCall: string,
+  endpointUpdates: Array<{ oldFunctionName?: string; newFunctionName?: string }> = []
+): boolean {
+  let current: NodePath | null = path.parentPath;
   while (current) {
-    if (current.isCallExpression && current.isCallExpression()) {
+    if (current.isCallExpression()) {
       const callee = (current.node as t.CallExpression).callee;
       const calleeString = generate(callee).code;
       if (calleeString.includes(targetCall)) {
         return true;
+      }
+      // Check matching updated function name if method was already renamed
+      for (const ep of endpointUpdates) {
+        if (
+          ep.oldFunctionName &&
+          ep.newFunctionName &&
+          (targetCall.includes(ep.oldFunctionName) || targetCall.includes(ep.newFunctionName))
+        ) {
+          if (
+            calleeString.includes(ep.oldFunctionName) ||
+            calleeString.includes(ep.newFunctionName)
+          ) {
+            return true;
+          }
+        }
       }
     }
     current = current.parentPath;
