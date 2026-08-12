@@ -8,7 +8,7 @@ export function renderDashboardHTML(): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>APIShift — Self-Maintaining APIs Platform</title>
   <meta name="description" content="APIShift is Dependabot for API Code Usages. Automatically detect breaking API changes and submit deterministic AST refactoring Pull Requests across customer codebases.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,7 @@ export function renderDashboardHTML(): string {
         radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 40%);
       background-attachment: fixed;
+      overflow-x: hidden;
     }
 
     header {
@@ -49,8 +50,9 @@ export function renderDashboardHTML(): string {
       backdrop-filter: blur(16px);
       background: rgba(7, 9, 14, 0.85);
       border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
+      padding: 0.85rem 1.5rem;
       display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 0.75rem;
     }
 
     .logo-container { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
@@ -59,7 +61,7 @@ export function renderDashboardHTML(): string {
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
       font-family: var(--font-heading); font-weight: 800; font-size: 1.25rem; color: white;
-      box-shadow: 0 0 15px var(--primary-glow);
+      box-shadow: 0 0 15px var(--primary-glow); shrink: 0;
     }
 
     .logo-text {
@@ -76,55 +78,77 @@ export function renderDashboardHTML(): string {
     .btn-github {
       background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; font-weight: 600;
       padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.9rem; transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .btn-github:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3); }
 
-    .container { max-width: 1380px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .container { max-width: 1380px; margin: 0 auto; padding: 2.5rem 1.25rem; width: 100%; }
 
-    .hero { text-align: center; max-width: 900px; margin: 0 auto 3rem auto; }
+    .hero { text-align: center; max-width: 900px; margin: 0 auto 2.5rem auto; padding: 0 0.5rem; }
     .hero-pill {
       display: inline-flex; align-items: center; gap: 0.5rem;
       background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #34d399; font-size: 0.875rem; font-weight: 500; padding: 0.4rem 1rem; border-radius: 30px; margin-bottom: 1.5rem;
+      color: #34d399; font-size: 0.85rem; font-weight: 500; padding: 0.35rem 0.9rem; border-radius: 30px; margin-bottom: 1.25rem;
     }
 
-    .hero h1 { font-family: var(--font-heading); font-size: 3.25rem; font-weight: 800; line-height: 1.1; margin-bottom: 1rem; }
+    .hero h1 { font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
     .hero h1 span { background: linear-gradient(135deg, #818cf8 0%, #38bdf8 50%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: clamp(0.95rem, 2.5vw, 1.1rem); color: var(--text-muted); line-height: 1.6; }
 
-    .section-title { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+    .section-title { font-family: var(--font-heading); font-size: clamp(1.3rem, 3.5vw, 1.8rem); font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+
+    .toolbar-container {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;
+    }
 
     /* Monaco Diff Container */
     .diff-wrapper {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 3rem;
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 2.5rem; width: 100%;
     }
     .diff-header {
-      background: rgba(15, 23, 42, 0.95); padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border-color);
-      display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600;
+      background: rgba(15, 23, 42, 0.95); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; flex-wrap: wrap; gap: 0.5rem;
     }
-    #monaco-diff-container { width: 100%; height: 480px; }
+    #monaco-diff-container { width: 100%; height: clamp(350px, 50vh, 480px); }
 
     .btn-run {
       background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 600;
-      padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.25rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;
+      min-height: 42px; touch-action: manipulation;
     }
     .btn-run:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
 
     /* Fleet Manager & Queue Grid */
-    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem; }
-    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
-
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem; }
+    
     .card-panel {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; width: 100%; overflow: hidden;
     }
 
-    .table-custom { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
-    .table-custom th, .table-custom td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-color); }
-    .table-custom th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-custom { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.85rem; min-width: 480px; }
+    .table-custom th, .table-custom td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+    .table-custom th { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
 
     .badge-status { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block; }
     .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
     .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 
-    footer { border-top: 1px solid var(--border-color); padding: 2.5rem 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+    footer { border-top: 1px solid var(--border-color); padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 900px) {
+      .grid-2col { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+
+    @media (max-width: 640px) {
+      header { padding: 0.75rem 1rem; }
+      .nav-badge { display: none; }
+      .container { padding: 1.5rem 0.75rem; }
+      .toolbar-container { flex-direction: column; align-items: flex-start; }
+      .btn-run { width: 100%; justify-content: center; }
+      .card-panel { padding: 1rem 0.75rem; }
+    }
   </style>
 
   <!-- Load Monaco Editor -->
@@ -140,7 +164,7 @@ export function renderDashboardHTML(): string {
     </a>
     <a href="https://github.com/TurboRx/APIShift-Bot" target="_blank" class="btn-github">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-      GitHub App
+      <span>GitHub App</span>
     </a>
   </header>
 
@@ -157,8 +181,8 @@ export function renderDashboardHTML(): string {
     <h2 class="section-title">
       <span>🎨 Monaco Visual Diff Editor</span>
     </h2>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-      <span style="color: var(--text-muted); font-size: 0.9rem;" id="diff-status">Rule: card ➔ payment_method | /v1/charges ➔ /v1/payment_intents</span>
+    <div class="toolbar-container">
+      <span style="color: var(--text-muted); font-size: 0.85rem;" id="diff-status">Rule: card ➔ payment_method | /v1/charges ➔ /v1/payment_intents</span>
       <button class="btn-run" onclick="runMonacoRefactor()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         Re-Run AST Transformation
@@ -177,68 +201,72 @@ export function renderDashboardHTML(): string {
     <div class="grid-2col">
       <!-- Fleet Manager Panel -->
       <div class="card-panel">
-        <h2 class="section-title" style="font-size: 1.4rem;">
+        <h2 class="section-title" style="font-size: 1.3rem;">
           <span>🌐 Fleet Migration Manager</span>
         </h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Batch dispatch refactoring PRs across microservice repositories.</p>
-        <table class="table-custom">
-          <thead>
-            <tr><th>Repository</th><th>Branch</th><th>Status</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>org/billing-service</code></td>
-              <td>main</td>
-              <td><span class="badge-status badge-success">PR #42 Created</span></td>
-              <td><a href="#" style="color: var(--primary);">View PR</a></td>
-            </tr>
-            <tr>
-              <td><code>org/auth-api</code></td>
-              <td>main</td>
-              <td><span class="badge-status badge-success">PR #18 Created</span></td>
-              <td><a href="#" style="color: var(--primary);">View PR</a></td>
-            </tr>
-            <tr>
-              <td><code>org/checkout-web</code></td>
-              <td>main</td>
-              <td><span class="badge-status badge-pending">Queued</span></td>
-              <td><a href="#" style="color: var(--text-muted);">Syncing</a></td>
-            </tr>
-          </tbody>
-        </table>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">Batch dispatch refactoring PRs across microservice repositories.</p>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Repository</th><th>Branch</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>org/billing-service</code></td>
+                <td>main</td>
+                <td><span class="badge-status badge-success">PR #42 Created</span></td>
+                <td><a href="#" style="color: var(--primary);">View PR</a></td>
+              </tr>
+              <tr>
+                <td><code>org/auth-api</code></td>
+                <td>main</td>
+                <td><span class="badge-status badge-success">PR #18 Created</span></td>
+                <td><a href="#" style="color: var(--primary);">View PR</a></td>
+              </tr>
+              <tr>
+                <td><code>org/checkout-web</code></td>
+                <td>main</td>
+                <td><span class="badge-status badge-pending">Queued</span></td>
+                <td><a href="#" style="color: var(--text-muted);">Syncing</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Webhook Delivery Queue Monitor Panel -->
       <div class="card-panel">
-        <h2 class="section-title" style="font-size: 1.4rem;">
+        <h2 class="section-title" style="font-size: 1.3rem;">
           <span>🔄 Webhook Queue & Retry Monitor</span>
         </h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Live background job queue status & exponential backoff retries.</p>
-        <table class="table-custom">
-          <thead>
-            <tr><th>Job ID</th><th>Event</th><th>Attempts</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>job_10492_a2</code></td>
-              <td>repository_dispatch</td>
-              <td>1/3</td>
-              <td><span class="badge-status badge-success">Completed</span></td>
-            </tr>
-            <tr>
-              <td><code>job_10493_b4</code></td>
-              <td>check_suite</td>
-              <td>1/3</td>
-              <td><span class="badge-status badge-success">Completed</span></td>
-            </tr>
-            <tr>
-              <td><code>job_10494_c8</code></td>
-              <td>push</td>
-              <td>0/3</td>
-              <td><span class="badge-status badge-pending">Pending</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">Live background job queue status & exponential backoff retries.</p>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Job ID</th><th>Event</th><th>Attempts</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>job_10492_a2</code></td>
+                <td>repository_dispatch</td>
+                <td>1/3</td>
+                <td><span class="badge-status badge-success">Completed</span></td>
+              </tr>
+              <tr>
+                <td><code>job_10493_b4</code></td>
+                <td>check_suite</td>
+                <td>1/3</td>
+                <td><span class="badge-status badge-success">Completed</span></td>
+              </tr>
+              <tr>
+                <td><code>job_10494_c8</code></td>
+                <td>push</td>
+                <td>0/3</td>
+                <td><span class="badge-status badge-pending">Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -283,16 +311,23 @@ export async function processPayment(card: string) {
 
     require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
     require(['vs/editor/editor.main'], function () {
+      const isMobile = window.innerWidth <= 768;
       diffEditor = monaco.editor.createDiffEditor(document.getElementById('monaco-diff-container'), {
         theme: 'vs-dark',
         readOnly: false,
-        renderSideBySide: true,
+        renderSideBySide: !isMobile,
         automaticLayout: true
       });
 
       diffEditor.setModel({
         original: monaco.editor.createModel(initialOriginalCode, 'typescript'),
         modified: monaco.editor.createModel(initialModifiedCode, 'typescript')
+      });
+
+      window.addEventListener('resize', function () {
+        if (diffEditor) {
+          diffEditor.updateOptions({ renderSideBySide: window.innerWidth > 768 });
+        }
       });
     });
 
