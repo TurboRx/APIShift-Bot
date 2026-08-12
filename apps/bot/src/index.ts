@@ -16,7 +16,7 @@ import { renderDashboardHTML } from './web/dashboard.js';
 import { pollVendorSpecs } from './cron/spec-watcher.js';
 import { globalWebhookQueue } from './queue/webhook-queue.js';
 import { batchFleetRefactor } from './fleet/fleet-manager.js';
-import { rewriteAST } from '@apishift/core';
+import { rewriteAST, diffSchemas } from '@apishift/core';
 
 // 1. Web Dashboard & Info routes
 app.get('/', (c) => c.html(renderDashboardHTML()));
@@ -35,6 +35,18 @@ app.post('/api/refactor', async (c) => {
     return c.json(result);
   } catch (err) {
     return c.json({ error: 'Failed to process AST refactor', details: String(err) }, 400);
+  }
+});
+
+// Live Schema Differ API
+app.post('/api/diff', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { oldSpec, newSpec } = body;
+    const result = await diffSchemas(oldSpec, newSpec);
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: 'Failed to process schema diff', details: String(err) }, 400);
   }
 });
 
