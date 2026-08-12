@@ -3,7 +3,13 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { initCommand, type InitOptions } from './commands/init.js';
-import { diffSchemas, rewriteAST, type BreakingChange, type RenameRule } from '@apishift/core';
+import {
+  diffSchemas,
+  rewriteAST,
+  type BreakingChange,
+  type RenameRule,
+  type EndpointUpdateRule,
+} from '@apishift/core';
 
 export async function runCLI(): Promise<void> {
   const program = new Command();
@@ -86,7 +92,7 @@ export async function runCLI(): Promise<void> {
 
         const sourceCode = fs.readFileSync(filePath, 'utf-8');
         let renames: RenameRule[] = [];
-        let endpointUpdates: any[] = [];
+        let endpointUpdates: EndpointUpdateRule[] = [];
 
         if (options.rules) {
           const parsed = JSON.parse(options.rules);
