@@ -109,6 +109,14 @@ app.post('/api/fleet/migrate', async (c) => {
 });
 
 // 2. GitHub Webhook Handler
+app.get('/api/webhook', (c) =>
+  c.json({
+    status: 'online',
+    message:
+      'APIShift Webhook Listener is active. Send POST requests with GitHub webhook payloads to trigger migrations.',
+  })
+);
+
 app.post('/api/webhook', async (c) => {
   const signature = c.req.header('x-hub-signature-256');
   const event = c.req.header('x-github-event') || 'unknown';
@@ -232,5 +240,8 @@ app.post('/api/webhook', async (c) => {
 
   return c.json({ message: `Webhook event '${event}' acknowledged.` }, 200);
 });
+
+// Fallback route: render Dashboard HTML for any unmatched URL paths
+app.notFound((c) => c.html(renderDashboardHTML()));
 
 export default app;
