@@ -226,13 +226,67 @@ function compareOperations(
   const removedParams = oldParams.filter((p) => !newParamNames.has(p.name));
   const addedParams = newParams.filter((p) => !oldParamNames.has(p.name));
 
+  // Check for operation deprecation
+  if (newOp.deprecated && !oldOp.deprecated) {
+    changes.push({
+      id: `op-deprecated-${path}-${method}`,
+      type: 'ENDPOINT_DEPRECATED',
+      path,
+      method: method.toUpperCase(),
+      description: `Endpoint ${method.toUpperCase()} ${path} has been marked as deprecated.`,
+    });
+  }
+
+  // Check shared parameters for type or required status changes
+  for (const oldP of oldParams) {
+    const matchingNewP = newParams.find((p) => p.name === oldP.name);
+    if (matchingNewP) {
+      if (
+        oldP.schema?.type &&
+        matchingNewP.schema?.type &&
+        oldP.schema.type !== matchingNewP.schema.type
+      ) {
+        changes.push({
+          id: `param-type-changed-${path}-${method}-${oldP.name}`,
+          type: 'PARAM_TYPE_CHANGED',
+          path,
+          method: method.toUpperCase(),
+          description: `Parameter '${oldP.name}' schema type changed from '${oldP.schema.type}' to '${matchingNewP.schema.type}' in ${method.toUpperCase()} ${path}`,
+        });
+      }
+      if (!oldP.required && matchingNewP.required) {
+        changes.push({
+          id: `param-required-changed-${path}-${method}-${oldP.name}`,
+          type: 'PARAM_REQUIRED_CHANGED',
+          path,
+          method: method.toUpperCase(),
+          description: `Parameter '${oldP.name}' is now required in ${method.toUpperCase()} ${path}`,
+        });
+      }
+    }
+  }
+
+  // Check for newly added required parameters (breaking change for existing clients)
+  for (const added of addedParams) {
+    if (added.required && !added['x-apishift-renamed-from']) {
+      changes.push({
+        id: `param-required-added-${path}-${method}-${added.name}`,
+        type: 'PARAM_REQUIRED_CHANGED',
+        path,
+        method: method.toUpperCase(),
+        description: `Newly added required parameter '${added.name}' in ${method.toUpperCase()} ${path}`,
+      });
+    }
+  }
+
   // Heuristic / Explicit check for parameter renames
   for (const removed of removedParams) {
     // Check if new param has explicit x-apishift-renamed-from extension or structural match
     const match = addedParams.find(
       (added) =>
         added['x-apishift-renamed-from'] === removed.name ||
-        (added.in === removed.in && added.schema?.type === removed.schema?.type)
+        (added.in === removed.in &&
+          (added.schema?.type === removed.schema?.type || isRenamePair(removed.name, added.name)))
     );
 
     if (match) {
@@ -412,9 +466,22 @@ function isRenamePair(oldName: string, newName: string): boolean {
     ['api_key', 'access_token'],
     ['user_id', 'account_id'],
     ['phone', 'phone_number'],
+    ['prompt', 'messages'],
+    ['to', 'recipients'],
+    ['sendEmail', 'emails.send'],
   ];
 
-  return commonPairs.some(([o, n]) => oldName === o && newName === n);
+  if (commonPairs.some(([o, n]) => oldName === o && newName === n)) {
+    return true;
+  }
+
+  // Normalize camelCase to snake_case for cross-convention matching
+  const toSnake = (s: string) => s.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+  if (toSnake(oldName) === toSnake(newName)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

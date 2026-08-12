@@ -111,4 +111,44 @@ describe('OpenAPI Schema Differ Engine', () => {
     expect(result.hasBreakingChanges).toBe(false);
     expect(result.breakingChanges.length).toBe(0);
   });
+
+  it('detects parameter type changes and required additions', async () => {
+    const oldSpec: OpenAPIObject = {
+      openapi: '3.0.0',
+      info: { title: 'Test API', version: '1.0' },
+      paths: {
+        '/v1/items': {
+          get: {
+            parameters: [
+              { name: 'limit', in: 'query', schema: { type: 'string' } },
+              { name: 'filter', in: 'query', required: false },
+            ],
+          },
+        },
+      },
+    };
+
+    const newSpec: OpenAPIObject = {
+      openapi: '3.0.0',
+      info: { title: 'Test API', version: '2.0' },
+      paths: {
+        '/v1/items': {
+          get: {
+            deprecated: true,
+            parameters: [
+              { name: 'limit', in: 'query', schema: { type: 'integer' } },
+              { name: 'filter', in: 'query', required: true },
+            ],
+          },
+        },
+      },
+    };
+
+    const result = await diffSchemas(oldSpec, newSpec);
+
+    expect(result.hasBreakingChanges).toBe(true);
+    expect(result.breakingChanges.some((c) => c.type === 'ENDPOINT_DEPRECATED')).toBe(true);
+    expect(result.breakingChanges.some((c) => c.type === 'PARAM_TYPE_CHANGED')).toBe(true);
+    expect(result.breakingChanges.some((c) => c.type === 'PARAM_REQUIRED_CHANGED')).toBe(true);
+  });
 });
