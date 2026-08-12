@@ -13,7 +13,7 @@ APIShift fills the missing application layer connecting API vendors (Stripe, Twi
 
 1. **Zero-AI-Token Cost Core**: 100% type-safe, deterministic Babel AST rewriter (`< 15ms` execution latency, $0 token cost).
 2. **Hybrid AI Fallback**: LLM provider integrations (OpenAI, Anthropic, Gemini) for non-standard refactorings.
-3. **OpenAPI 3.1 & Swagger 2.0 Ingester**: Automatic schema diffing matrix tracking property renames, parameter removals, and endpoint path migrations.
+3. **OpenAPI 3.2.0 & Swagger 2.0 Ingester**: Automatic schema diffing matrix tracking property renames, parameter removals, and endpoint path migrations.
 4. **Cloudflare Edge Bot & Interactive Web Dashboard**: High-converting Hono Web Dashboard & live interactive AST migration sandbox + automated GitHub App PR generator.
 
 ---

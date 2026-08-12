@@ -51,8 +51,8 @@ export async function pollVendorSpecs(
     try {
       // In production, fetch spec URLs via HTTP or object storage
       const result = await diffSchemas(
-        { openapi: '3.0.0', info: { title: vendor.name, version: '1.0' }, paths: {} },
-        { openapi: '3.0.0', info: { title: vendor.name, version: '2.0' }, paths: {} }
+        { openapi: '3.2.0', info: { title: vendor.name, version: '1.0' }, paths: {} },
+        { openapi: '3.2.0', info: { title: vendor.name, version: '2.0' }, paths: {} }
       );
 
       results.push({

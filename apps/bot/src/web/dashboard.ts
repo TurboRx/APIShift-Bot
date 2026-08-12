@@ -242,7 +242,7 @@ export function renderDashboardHTML(): string {
           Check Spec Updates Now
         </button>
       </div>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Automated OpenAPI 3.1 & Swagger schema diffing matrix tracking breaking API changes across vendor APIs.</p>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Automated OpenAPI 3.2.0 & Swagger schema diffing matrix tracking breaking API changes across vendor APIs.</p>
       <div class="table-responsive">
         <table class="table-custom">
           <thead>

@@ -4,7 +4,7 @@ import { diffSchemas, type OpenAPIObject } from './schema-differ.js';
 describe('OpenAPI Schema Differ Engine', () => {
   it('detects parameter and request body field renames between OpenAPI specs', async () => {
     const oldSpec: OpenAPIObject = {
-      openapi: '3.0.0',
+      openapi: '3.2.0',
       info: { title: 'Test API', version: '1.0.0' },
       paths: {
         '/v1/charges': {
@@ -29,7 +29,7 @@ describe('OpenAPI Schema Differ Engine', () => {
     };
 
     const newSpec: OpenAPIObject = {
-      openapi: '3.0.0',
+      openapi: '3.2.0',
       info: { title: 'Test API', version: '2.0.0' },
       paths: {
         '/v1/charges': {
@@ -67,7 +67,7 @@ describe('OpenAPI Schema Differ Engine', () => {
 
   it('detects endpoint path migration from deprecated endpoints', async () => {
     const oldSpec: OpenAPIObject = {
-      openapi: '3.0.0',
+      openapi: '3.2.0',
       info: { title: 'Test API', version: '1.0.0' },
       paths: {
         '/v1/charges': {
@@ -77,7 +77,7 @@ describe('OpenAPI Schema Differ Engine', () => {
     };
 
     const newSpec: OpenAPIObject = {
-      openapi: '3.0.0',
+      openapi: '3.2.0',
       info: { title: 'Test API', version: '2.0.0' },
       paths: {
         '/v1/payment_intents': {
@@ -97,7 +97,7 @@ describe('OpenAPI Schema Differ Engine', () => {
 
   it('returns no breaking changes when specs are identical', async () => {
     const spec: OpenAPIObject = {
-      openapi: '3.0.0',
+      openapi: '3.2.0',
       info: { title: 'Test API', version: '1.0.0' },
       paths: {
         '/v1/users': {
