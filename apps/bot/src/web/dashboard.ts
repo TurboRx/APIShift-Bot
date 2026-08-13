@@ -739,8 +739,13 @@ export function renderDashboardHTML(): string {
 
       window.loadPreset = loadPreset;
 
+      const API_BASE = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('github.io'))
+        ? 'https://apishift-bot.pranaydebnath645-07a.workers.dev'
+        : '';
+
       async function safeFetchJson(url, options) {
-        const res = await fetch(url, options);
+        const targetUrl = (url.startsWith('/api/') && API_BASE) ? (API_BASE + url) : url;
+        const res = await fetch(targetUrl, options);
         const text = await res.text();
         let data;
         try {
@@ -749,7 +754,7 @@ export function renderDashboardHTML(): string {
           if (!res.ok) {
             throw new Error('HTTP ' + res.status + ' ' + res.statusText + (text ? ': ' + text.slice(0, 100) : ''));
           }
-          throw new Error('Invalid JSON response from ' + url);
+          throw new Error('Invalid JSON response from ' + targetUrl);
         }
         if (!res.ok) {
           const errMsg = data.error || data.message || ('HTTP ' + res.status + ' ' + res.statusText);

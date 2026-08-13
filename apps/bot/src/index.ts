@@ -10,7 +10,15 @@ export interface Env {
   DEFAULT_BRANCH?: string;
 }
 
+import { cors } from 'hono/cors';
+
 const app = new Hono<{ Bindings: Env }>();
+
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}));
 
 import { renderDashboardHTML } from './web/dashboard.js';
 import { pollVendorSpecs } from './cron/spec-watcher.js';
