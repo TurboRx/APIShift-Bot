@@ -579,12 +579,14 @@ export function renderDashboardHTML(): string {
 
       window.switchTab = switchTab;
 
-      // Event listeners for tabs
-      document.addEventListener('DOMContentLoaded', function () {
+      window.switchTab = switchTab;
+
+      function bindEventListeners() {
         const tabContainer = document.getElementById('tab-nav-container');
-        if (tabContainer) {
+        if (tabContainer && !tabContainer.getAttribute('data-init')) {
+          tabContainer.setAttribute('data-init', 'true');
           tabContainer.addEventListener('click', function (e) {
-            const btn = e.target.closest('.tab-btn');
+            const btn = (e.target as HTMLElement).closest('.tab-btn');
             if (btn) {
               const tabId = btn.getAttribute('data-tab');
               if (tabId) switchTab(tabId);
@@ -592,96 +594,113 @@ export function renderDashboardHTML(): string {
           });
         }
 
-        // Preset selector dropdown listener
-        const presetSelect = document.getElementById('preset-select');
-        if (presetSelect) {
+        const presetSelect = document.getElementById('preset-select') as HTMLSelectElement;
+        if (presetSelect && !presetSelect.getAttribute('data-init')) {
+          presetSelect.setAttribute('data-init', 'true');
           presetSelect.addEventListener('change', function () {
             loadPreset(this.value);
           });
         }
 
-        // Run AST transform button listener
         const btnRunAST = document.getElementById('btn-run-ast');
-        if (btnRunAST) {
+        if (btnRunAST && !btnRunAST.getAttribute('data-init')) {
+          btnRunAST.setAttribute('data-init', 'true');
           btnRunAST.addEventListener('click', runMonacoRefactor);
         }
 
-        // Copy Code button listener
         const btnCopyCode = document.getElementById('btn-copy-code');
-        if (btnCopyCode) {
+        if (btnCopyCode && !btnCopyCode.getAttribute('data-init')) {
+          btnCopyCode.setAttribute('data-init', 'true');
           btnCopyCode.addEventListener('click', copyRefactoredCode);
         }
 
-        // Compare Specs button listener
         const btnRunDiff = document.getElementById('btn-run-diff');
-        if (btnRunDiff) {
+        if (btnRunDiff && !btnRunDiff.getAttribute('data-init')) {
+          btnRunDiff.setAttribute('data-init', 'true');
           btnRunDiff.addEventListener('click', runSchemaDiff);
         }
 
-        // Sync Spec Watcher listener
         const btnSyncWatcher = document.getElementById('btn-sync-watcher');
-        if (btnSyncWatcher) {
+        if (btnSyncWatcher && !btnSyncWatcher.getAttribute('data-init')) {
+          btnSyncWatcher.setAttribute('data-init', 'true');
           btnSyncWatcher.addEventListener('click', checkSpecWatcher);
         }
 
-        // Test Webhook listener
         const btnTestWebhook = document.getElementById('btn-test-webhook');
-        if (btnTestWebhook) {
+        if (btnTestWebhook && !btnTestWebhook.getAttribute('data-init')) {
+          btnTestWebhook.setAttribute('data-init', 'true');
           btnTestWebhook.addEventListener('click', enqueueTestWebhook);
         }
 
-        // Fleet Form submit listener
         const fleetForm = document.getElementById('fleet-form');
-        if (fleetForm) {
+        if (fleetForm && !fleetForm.getAttribute('data-init')) {
+          fleetForm.setAttribute('data-init', 'true');
           fleetForm.addEventListener('submit', dispatchFleetMigration);
         }
 
-        // Delegated listener for Load Preset buttons in Spec Watcher table
         document.addEventListener('click', function(e) {
-          const btn = e.target.closest('.btn-load-preset');
+          const btn = (e.target as HTMLElement).closest('.btn-load-preset');
           if (btn) {
             const presetKey = btn.getAttribute('data-preset');
             if (presetKey) {
               switchTab('workbench');
-              if (presetSelect) presetSelect.value = presetKey;
+              const ps = document.getElementById('preset-select') as HTMLSelectElement;
+              if (ps) ps.value = presetKey;
               loadPreset(presetKey);
             }
           }
         });
-      });
+      }
 
-      // Load Monaco Editor dynamically
-      require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
-      require(['vs/editor/editor.main'], function () {
-        const isMobile = window.innerWidth < 768;
-        diffEditor = monaco.editor.createDiffEditor(document.getElementById('monaco-diff-container'), {
-          theme: 'vs-dark',
-          readOnly: false,
-          renderSideBySide: !isMobile,
-          automaticLayout: true
-        });
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindEventListeners);
+      } else {
+        bindEventListeners();
+      }
 
-        diffEditor.setModel({
-          original: monaco.editor.createModel(PRESETS.stripe.original, 'typescript'),
-          modified: monaco.editor.createModel(PRESETS.stripe.modified, 'typescript')
-        });
+      function initMonacoEditor() {
+        if (typeof (window as any).require !== 'undefined') {
+          (window as any).require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+          (window as any).require(['vs/editor/editor.main'], function () {
+            const container = document.getElementById('monaco-diff-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const isMobile = window.innerWidth < 768;
+            diffEditor = (window as any).monaco.editor.createDiffEditor(container, {
+              theme: 'vs-dark',
+              readOnly: false,
+              renderSideBySide: !isMobile,
+              automaticLayout: true
+            });
 
-        window.addEventListener('resize', function () {
-          if (diffEditor) {
-            diffEditor.updateOptions({ renderSideBySide: window.innerWidth >= 768 });
-          }
-        });
-      });
+            diffEditor.setModel({
+              original: (window as any).monaco.editor.createModel(PRESETS.stripe.original, 'typescript'),
+              modified: (window as any).monaco.editor.createModel(PRESETS.stripe.modified, 'typescript')
+            });
 
-      function loadPreset(key) {
-        const preset = PRESETS[key];
-        if (!preset || !diffEditor) return;
-        const oldInput = document.getElementById('rule-old');
-        const newInput = document.getElementById('rule-new');
+            window.addEventListener('resize', function () {
+              if (diffEditor) {
+                diffEditor.updateOptions({ renderSideBySide: window.innerWidth >= 768 });
+              }
+            });
+          });
+        } else {
+          setTimeout(initMonacoEditor, 150);
+        }
+      }
+
+      initMonacoEditor();
+
+      function loadPreset(key: string) {
+        const preset = PRESETS[key] || PRESETS.stripe;
+        const oldInput = document.getElementById('rule-old') as HTMLInputElement;
+        const newInput = document.getElementById('rule-new') as HTMLInputElement;
         if (oldInput) oldInput.value = preset.oldRule;
         if (newInput) newInput.value = preset.newRule;
-        diffEditor.getModel().original.setValue(preset.original);
-        diffEditor.getModel().modified.setValue(preset.modified);
+        if (diffEditor && diffEditor.getModel() && diffEditor.getModel().original && diffEditor.getModel().modified) {
+          diffEditor.getModel().original.setValue(preset.original);
+          diffEditor.getModel().modified.setValue(preset.modified);
+        }
       }
 
       window.loadPreset = loadPreset;
@@ -707,12 +726,15 @@ export function renderDashboardHTML(): string {
       }
 
       async function runMonacoRefactor() {
-        if (!diffEditor) return;
-        const code = diffEditor.getModel().original.getValue();
-        const oldRule = (document.getElementById('rule-old')?.value || '').trim();
-        const newRule = (document.getElementById('rule-new')?.value || '').trim();
-        const presetKey = document.getElementById('preset-select')?.value || 'stripe';
+        const oldRule = (document.getElementById('rule-old') as HTMLInputElement)?.value.trim() || '';
+        const newRule = (document.getElementById('rule-new') as HTMLInputElement)?.value.trim() || '';
+        const presetKey = (document.getElementById('preset-select') as HTMLSelectElement)?.value || 'stripe';
         const preset = PRESETS[presetKey] || PRESETS.stripe;
+
+        let code = preset.original;
+        if (diffEditor && diffEditor.getModel() && diffEditor.getModel().original) {
+          code = diffEditor.getModel().original.getValue();
+        }
 
         const metricsStatus = document.getElementById('metrics-status');
         if (metricsStatus) metricsStatus.innerText = 'Executing Babel AST rewrite...';
@@ -734,7 +756,9 @@ export function renderDashboardHTML(): string {
           const duration = (performance.now() - startTime).toFixed(1);
 
           if (data.code) {
-            diffEditor.getModel().modified.setValue(data.code);
+            if (diffEditor && diffEditor.getModel() && diffEditor.getModel().modified) {
+              diffEditor.getModel().modified.setValue(data.code);
+            }
             if (metricsStatus) metricsStatus.innerText = 'Applied ' + (data.modifiedCount || 1) + ' AST change(s)';
             const metricsLatency = document.getElementById('metrics-latency');
             if (metricsLatency) metricsLatency.innerText = duration + ' ms';
@@ -742,8 +766,6 @@ export function renderDashboardHTML(): string {
             if (metricsStatus) metricsStatus.innerText = 'Code processed (' + duration + ' ms)';
           }
         } catch (err: any) {
-          if (metricsStatus) metricsStatus.innerText = 'Error processing AST: ' + (err.message || err);
-        }
       }
 
       window.runMonacoRefactor = runMonacoRefactor;
