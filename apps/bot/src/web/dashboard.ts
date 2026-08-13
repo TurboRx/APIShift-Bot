@@ -4,6 +4,33 @@
  * Fully optimized for touch devices, mobile viewports, and desktop workstations.
  */
 
+const PRESETS_DATA = {
+  stripe: {
+    oldRule: 'card',
+    newRule: 'payment_method',
+    renames: [{ oldName: 'card', newName: 'payment_method' }],
+    endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }],
+    original: `import stripe from 'stripe';\n\ninterface ChargeParams {\n  amount: number;\n  card: string;\n}\n\nexport async function processPayment(card: string) {\n  const result = await stripe.charges.create({\n    amount: 5000,\n    card,\n  });\n  const endpoint = '/v1/charges/' + result.id;\n  return fetch(endpoint);\n}`,
+    modified: `import stripe from 'stripe';\n\ninterface ChargeParams {\n  amount: number;\n  payment_method: string;\n}\n\nexport async function processPayment(card: string) {\n  const result = await stripe.paymentIntents.create({\n    amount: 5000,\n    payment_method: card\n  });\n  const endpoint = '/v1/payment_intents/' + result.id;\n  return fetch(endpoint);\n}`
+  },
+  openai: {
+    oldRule: 'prompt',
+    newRule: 'messages',
+    renames: [{ oldName: 'prompt', newName: 'messages' }],
+    endpointUpdates: [{ oldPath: 'v1/completions', newPath: 'v1/chat/completions', oldFunctionName: 'completions', newFunctionName: 'chat.completions' }],
+    original: `import { OpenAI } from 'openai';\n\nconst client = new OpenAI();\n\nexport async function generateText(prompt: string) {\n  const response = await client.completions.create({\n    model: 'gpt-4o',\n    prompt: prompt,\n  });\n  return response.choices[0].text;\n}`,
+    modified: `import { OpenAI } from 'openai';\n\nconst client = new OpenAI();\n\nexport async function generateText(prompt: string) {\n  const response = await client.chat.completions.create({\n    model: 'gpt-4o',\n    messages: prompt,\n  });\n  return response.choices[0].text;\n}`
+  },
+  resend: {
+    oldRule: 'to',
+    newRule: 'recipients',
+    renames: [{ oldName: 'to', newName: 'recipients' }],
+    endpointUpdates: [{ oldPath: '/emails', newPath: '/v2/emails', oldFunctionName: 'sendEmail', newFunctionName: 'emails.send' }],
+    original: `import { Resend } from 'resend';\n\nconst resend = new Resend('re_123456');\n\nexport async function sendWelcome(to: string) {\n  return await resend.sendEmail({\n    to: to,\n    subject: 'Welcome to APIShift',\n    html: '<p>Hello world</p>'\n  });\n}`,
+    modified: `import { Resend } from 'resend';\n\nconst resend = new Resend('re_123456');\n\nexport async function sendWelcome(to: string) {\n  return await resend.emails.send({\n    recipients: to,\n    subject: 'Welcome to APIShift',\n    html: '<p>Hello world</p>'\n  });\n}`
+  }
+};
+
 export function renderDashboardHTML(): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -555,32 +582,7 @@ export function renderDashboardHTML(): string {
     (function () {
       let diffEditor = null;
 
-      const PRESETS = {
-        stripe: {
-          oldRule: 'card',
-          newRule: 'payment_method',
-          renames: [{ oldName: 'card', newName: 'payment_method' }],
-          endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }],
-          original: "import stripe from 'stripe';\\n\\ninterface ChargeParams {\\n  amount: number;\\n  card: string;\\n}\\n\\nexport async function processPayment(card: string) {\\n  const result = await stripe.charges.create({\\n    amount: 5000,\\n    card,\\n  });\\n  const endpoint = '/v1/charges/' + result.id;\\n  return fetch(endpoint);\\n}",
-          modified: "import stripe from 'stripe';\\n\\ninterface ChargeParams {\\n  amount: number;\\n  payment_method: string;\\n}\\n\\nexport async function processPayment(card: string) {\\n  const result = await stripe.paymentIntents.create({\\n    amount: 5000,\\n    payment_method: card\\n  });\\n  const endpoint = '/v1/payment_intents/' + result.id;\\n  return fetch(endpoint);\\n}"
-        },
-        openai: {
-          oldRule: 'prompt',
-          newRule: 'messages',
-          renames: [{ oldName: 'prompt', newName: 'messages' }],
-          endpointUpdates: [{ oldPath: 'v1/completions', newPath: 'v1/chat/completions', oldFunctionName: 'completions', newFunctionName: 'chat.completions' }],
-          original: "import { OpenAI } from 'openai';\\n\\nconst client = new OpenAI();\\n\\nexport async function generateText(prompt: string) {\\n  const response = await client.completions.create({\\n    model: 'gpt-4o',\\n    prompt: prompt,\\n  });\\n  return response.choices[0].text;\\n}",
-          modified: "import { OpenAI } from 'openai';\\n\\nconst client = new OpenAI();\\n\\nexport async function generateText(prompt: string) {\\n  const response = await client.chat.completions.create({\\n    model: 'gpt-4o',\\n    messages: prompt,\\n  });\\n  return response.choices[0].text;\\n}"
-        },
-        resend: {
-          oldRule: 'to',
-          newRule: 'recipients',
-          renames: [{ oldName: 'to', newName: 'recipients' }],
-          endpointUpdates: [{ oldPath: '/emails', newPath: '/v2/emails', oldFunctionName: 'sendEmail', newFunctionName: 'emails.send' }],
-          original: "import { Resend } from 'resend';\\n\\nconst resend = new Resend('re_123456');\\n\\nexport async function sendWelcome(to: string) {\\n  return await resend.sendEmail({\\n    to: to,\\n    subject: 'Welcome to APIShift',\\n    html: '<p>Hello world</p>'\\n  });\\n}",
-          modified: "import { Resend } from 'resend';\\n\\nconst resend = new Resend('re_123456');\\n\\nexport async function sendWelcome(to: string) {\\n  return await resend.emails.send({\\n    recipients: to,\\n    subject: 'Welcome to APIShift',\\n    html: '<p>Hello world</p>'\\n  });\\n}"
-        }
-      };
+      var PRESETS = ${JSON.stringify(PRESETS_DATA)};
 
       // Global Tab Switcher
       function switchTab(tabId) {
