@@ -121,7 +121,22 @@ app.post('/api/fleet/migrate', async (c) => {
 
   try {
     const octokit = new Octokit({ auth: githubToken });
-    const result = await batchFleetRefactor(octokit, body);
+    const repoStr = body.repository || 'TurboRx/APIShift-Bot';
+    const parts = repoStr.split('/');
+    const owner = parts[0] || 'TurboRx';
+    const repo = parts[1] || 'APIShift-Bot';
+
+    const fleetJob = {
+      jobId: 'fleet-' + Date.now(),
+      repositories: (Array.isArray(body.repositories) && body.repositories.length > 0)
+        ? body.repositories
+        : [{ owner, repo, baseBranch: 'main' }],
+      renameRules: body.renameRules || [{ oldName: 'card', newName: 'payment_method' }],
+      endpointUpdateRules: body.endpointUpdateRules || [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }],
+      summaryText: body.summaryText || 'APIShift Automated AST Fleet Migration'
+    };
+
+    const result = await batchFleetRefactor(octokit, fleetJob);
     return c.json({ status: 'success', result });
   } catch (err) {
     return c.json({ error: 'Failed to process fleet migration', details: String(err) }, 500);
