@@ -41,6 +41,7 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     allowReturnOutsideFunction: true,
     allowImportExportEverywhere: true,
     allowSuperOutsideMethod: true,
+    errorRecovery: true,
   });
 
   let modifiedCount = 0;
