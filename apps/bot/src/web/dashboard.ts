@@ -612,7 +612,7 @@ export function renderDashboardHTML(): string {
         if (tabContainer && !tabContainer.getAttribute('data-init')) {
           tabContainer.setAttribute('data-init', 'true');
           tabContainer.addEventListener('click', function (e) {
-            const btn = (e.target as HTMLElement).closest('.tab-btn');
+            const btn = e.target.closest('.tab-btn');
             if (btn) {
               const tabId = btn.getAttribute('data-tab');
               if (tabId) switchTab(tabId);
@@ -620,7 +620,7 @@ export function renderDashboardHTML(): string {
           });
         }
 
-        const presetSelect = document.getElementById('preset-select') as HTMLSelectElement;
+        const presetSelect = document.getElementById('preset-select');
         if (presetSelect && !presetSelect.getAttribute('data-init')) {
           presetSelect.setAttribute('data-init', 'true');
           presetSelect.addEventListener('change', function () {
@@ -665,12 +665,12 @@ export function renderDashboardHTML(): string {
         }
 
         document.addEventListener('click', function(e) {
-          const btn = (e.target as HTMLElement).closest('.btn-load-preset');
+          const btn = e.target.closest('.btn-load-preset');
           if (btn) {
             const presetKey = btn.getAttribute('data-preset');
             if (presetKey) {
               switchTab('workbench');
-              const ps = document.getElementById('preset-select') as HTMLSelectElement;
+              const ps = document.getElementById('preset-select');
               if (ps) ps.value = presetKey;
               loadPreset(presetKey);
             }
@@ -685,14 +685,14 @@ export function renderDashboardHTML(): string {
       }
 
       function initMonacoEditor() {
-        if (typeof (window as any).require !== 'undefined') {
-          (window as any).require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
-          (window as any).require(['vs/editor/editor.main'], function () {
+        if (typeof window.require !== 'undefined') {
+          window.require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+          window.require(['vs/editor/editor.main'], function () {
             const container = document.getElementById('monaco-diff-container');
             if (!container) return;
             container.innerHTML = '';
             const isMobile = window.innerWidth < 768;
-            diffEditor = (window as any).monaco.editor.createDiffEditor(container, {
+            diffEditor = window.monaco.editor.createDiffEditor(container, {
               theme: 'vs-dark',
               readOnly: false,
               renderSideBySide: !isMobile,
@@ -700,8 +700,8 @@ export function renderDashboardHTML(): string {
             });
 
             diffEditor.setModel({
-              original: (window as any).monaco.editor.createModel(PRESETS.stripe.original, 'typescript'),
-              modified: (window as any).monaco.editor.createModel(PRESETS.stripe.modified, 'typescript')
+              original: window.monaco.editor.createModel(PRESETS.stripe.original, 'typescript'),
+              modified: window.monaco.editor.createModel(PRESETS.stripe.modified, 'typescript')
             });
 
             window.addEventListener('resize', function () {
@@ -717,17 +717,17 @@ export function renderDashboardHTML(): string {
 
       initMonacoEditor();
 
-      function syncFallbackCode(orig?: string, mod?: string) {
-        const elOrig = document.getElementById('code-original') as HTMLTextAreaElement;
-        const elMod = document.getElementById('code-modified') as HTMLTextAreaElement;
+      function syncFallbackCode(orig, mod) {
+        const elOrig = document.getElementById('code-original');
+        const elMod = document.getElementById('code-modified');
         if (elOrig && orig !== undefined) elOrig.value = orig;
         if (elMod && mod !== undefined) elMod.value = mod;
       }
 
-      function loadPreset(key: string) {
+      function loadPreset(key) {
         const preset = PRESETS[key] || PRESETS.stripe;
-        const oldInput = document.getElementById('rule-old') as HTMLInputElement;
-        const newInput = document.getElementById('rule-new') as HTMLInputElement;
+        const oldInput = document.getElementById('rule-old');
+        const newInput = document.getElementById('rule-new');
         if (oldInput) oldInput.value = preset.oldRule;
         if (newInput) newInput.value = preset.newRule;
         syncFallbackCode(preset.original, preset.modified);
@@ -739,10 +739,10 @@ export function renderDashboardHTML(): string {
 
       window.loadPreset = loadPreset;
 
-      async function safeFetchJson(url: string, options?: RequestInit) {
+      async function safeFetchJson(url, options) {
         const res = await fetch(url, options);
         const text = await res.text();
-        let data: any;
+        let data;
         try {
           data = text && text.trim() ? JSON.parse(text) : {};
         } catch {
@@ -760,13 +760,13 @@ export function renderDashboardHTML(): string {
       }
 
       async function runMonacoRefactor() {
-        const oldRule = (document.getElementById('rule-old') as HTMLInputElement)?.value.trim() || '';
-        const newRule = (document.getElementById('rule-new') as HTMLInputElement)?.value.trim() || '';
-        const presetKey = (document.getElementById('preset-select') as HTMLSelectElement)?.value || 'stripe';
+        const oldRule = (document.getElementById('rule-old')?.value || '').trim();
+        const newRule = (document.getElementById('rule-new')?.value || '').trim();
+        const presetKey = document.getElementById('preset-select')?.value || 'stripe';
         const preset = PRESETS[presetKey] || PRESETS.stripe;
 
         let code = '';
-        const elOrig = document.getElementById('code-original') as HTMLTextAreaElement;
+        const elOrig = document.getElementById('code-original');
         if (diffEditor && diffEditor.getModel() && diffEditor.getModel().original) {
           code = diffEditor.getModel().original.getValue();
         } else if (elOrig && elOrig.value) {
@@ -805,7 +805,7 @@ export function renderDashboardHTML(): string {
           } else {
             if (metricsStatus) metricsStatus.innerText = 'Code processed (' + duration + ' ms)';
           }
-        } catch (err: any) {
+        } catch (err) {
           if (metricsStatus) metricsStatus.innerText = 'Error processing AST: ' + (err.message || err);
         }
       }
@@ -832,8 +832,8 @@ export function renderDashboardHTML(): string {
       window.copyRefactoredCode = copyRefactoredCode;
 
       async function runSchemaDiff() {
-        const oldVal = (document.getElementById('spec-old') as HTMLTextAreaElement)?.value || '';
-        const newVal = (document.getElementById('spec-new') as HTMLTextAreaElement)?.value || '';
+        const oldVal = document.getElementById('spec-old')?.value || '';
+        const newVal = document.getElementById('spec-new')?.value || '';
         const resultBox = document.getElementById('differ-result');
 
         if (resultBox) resultBox.innerText = 'Analyzing OpenAPI schemas via /api/diff...';
@@ -847,7 +847,7 @@ export function renderDashboardHTML(): string {
             body: JSON.stringify({ oldSpec, newSpec })
           });
           if (resultBox) resultBox.innerText = JSON.stringify(result, null, 2);
-        } catch (err: any) {
+        } catch (err) {
           if (resultBox) resultBox.innerText = 'Error processing spec diff: ' + (err.message || err);
         }
       }
@@ -862,7 +862,7 @@ export function renderDashboardHTML(): string {
           if (data.results && data.results.length > 0) {
             const body = document.getElementById('spec-table-body');
             if (body) {
-              body.innerHTML = data.results.map(function(r: any) {
+              body.innerHTML = data.results.map(function(r) {
                 return '<tr>' +
                   '<td><strong>' + r.vendorId.toUpperCase() + ' API</strong></td>' +
                   '<td><span class="badge-status badge-success">Active Sync</span></td>' +
@@ -882,9 +882,9 @@ export function renderDashboardHTML(): string {
 
       window.checkSpecWatcher = checkSpecWatcher;
 
-      async function dispatchFleetMigration(e: any) {
+      async function dispatchFleetMigration(e) {
         if (e && e.preventDefault) e.preventDefault();
-        const input = document.getElementById('fleet-repo-input') as HTMLInputElement;
+        const input = document.getElementById('fleet-repo-input');
         const repo = input ? input.value.trim() : '';
         if (!repo) return;
 
@@ -908,7 +908,7 @@ export function renderDashboardHTML(): string {
             tableBody.insertBefore(newRow, tableBody.firstChild);
           }
           if (input) input.value = '';
-        } catch (err: any) {
+        } catch (err) {
           alert('Error dispatching fleet PR: ' + (err.message || err));
         }
       }
@@ -932,7 +932,7 @@ export function renderDashboardHTML(): string {
           if (data.recentJobs && data.recentJobs.length > 0) {
             const body = document.getElementById('queue-table-body');
             if (body) {
-              body.innerHTML = data.recentJobs.slice(-5).reverse().map(function(j: any) {
+              body.innerHTML = data.recentJobs.slice(-5).reverse().map(function(j) {
                 const badgeClass = j.status === 'completed' ? 'badge-success' : 'badge-pending';
                 return '<tr>' +
                   '<td><code>' + j.id + '</code></td>' +
