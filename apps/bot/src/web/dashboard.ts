@@ -207,7 +207,20 @@ export function renderDashboardHTML(): string {
       display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 600;
       color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; flex-wrap: wrap; gap: 0.5rem;
     }
-    #monaco-diff-container { width: 100%; height: clamp(320px, 45vh, 480px); }
+    #monaco-diff-container { width: 100%; height: clamp(340px, 45vh, 480px); position: relative; }
+    .fallback-diff-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px; width: 100%; height: 100%; background: var(--border-color);
+    }
+    @media (max-width: 768px) {
+      .fallback-diff-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    }
+    .code-box { display: flex; flex-direction: column; background: #0f172a; height: 100%; overflow: hidden; }
+    .code-box-header {
+      padding: 0.45rem 0.85rem; background: #1e293b; color: #94a3b8; font-size: 0.725rem; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-color);
+    }
+    .code-textarea {
+      flex: 1; width: 100%; height: 100%; background: #090d16; color: #f8fafc; border: none; outline: none; padding: 0.85rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.825rem; line-height: 1.55; resize: none;
+    }
 
     .metrics-bar {
       display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;
@@ -345,7 +358,18 @@ export function renderDashboardHTML(): string {
             <span>Original Codebase Usage</span>
             <span style="color: #34d399;">Refactored AST Output</span>
           </div>
-          <div id="monaco-diff-container"></div>
+          <div id="monaco-diff-container">
+            <div id="fallback-diff-editor" class="fallback-diff-grid">
+              <div class="code-box">
+                <div class="code-box-header">Original Codebase (app.ts)</div>
+                <textarea id="code-original" class="code-textarea" spellcheck="false" placeholder="Loading original code..."></textarea>
+              </div>
+              <div class="code-box">
+                <div class="code-box-header">AST Refactored Output (app.ts)</div>
+                <textarea id="code-modified" class="code-textarea" spellcheck="false" readonly placeholder="Run AST Transform to see output..."></textarea>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="metrics-bar">
@@ -691,12 +715,20 @@ export function renderDashboardHTML(): string {
 
       initMonacoEditor();
 
+      function syncFallbackCode(orig?: string, mod?: string) {
+        const elOrig = document.getElementById('code-original') as HTMLTextAreaElement;
+        const elMod = document.getElementById('code-modified') as HTMLTextAreaElement;
+        if (elOrig && orig !== undefined) elOrig.value = orig;
+        if (elMod && mod !== undefined) elMod.value = mod;
+      }
+
       function loadPreset(key: string) {
         const preset = PRESETS[key] || PRESETS.stripe;
         const oldInput = document.getElementById('rule-old') as HTMLInputElement;
         const newInput = document.getElementById('rule-new') as HTMLInputElement;
         if (oldInput) oldInput.value = preset.oldRule;
         if (newInput) newInput.value = preset.newRule;
+        syncFallbackCode(preset.original, preset.modified);
         if (diffEditor && diffEditor.getModel() && diffEditor.getModel().original && diffEditor.getModel().modified) {
           diffEditor.getModel().original.setValue(preset.original);
           diffEditor.getModel().modified.setValue(preset.modified);
@@ -731,9 +763,14 @@ export function renderDashboardHTML(): string {
         const presetKey = (document.getElementById('preset-select') as HTMLSelectElement)?.value || 'stripe';
         const preset = PRESETS[presetKey] || PRESETS.stripe;
 
-        let code = preset.original;
+        let code = '';
+        const elOrig = document.getElementById('code-original') as HTMLTextAreaElement;
         if (diffEditor && diffEditor.getModel() && diffEditor.getModel().original) {
           code = diffEditor.getModel().original.getValue();
+        } else if (elOrig && elOrig.value) {
+          code = elOrig.value;
+        } else {
+          code = preset.original;
         }
 
         const metricsStatus = document.getElementById('metrics-status');
@@ -756,6 +793,7 @@ export function renderDashboardHTML(): string {
           const duration = (performance.now() - startTime).toFixed(1);
 
           if (data.code) {
+            syncFallbackCode(undefined, data.code);
             if (diffEditor && diffEditor.getModel() && diffEditor.getModel().modified) {
               diffEditor.getModel().modified.setValue(data.code);
             }
@@ -766,9 +804,13 @@ export function renderDashboardHTML(): string {
             if (metricsStatus) metricsStatus.innerText = 'Code processed (' + duration + ' ms)';
           }
         } catch (err: any) {
+          if (metricsStatus) metricsStatus.innerText = 'Error processing AST: ' + (err.message || err);
+        }
       }
 
       window.runMonacoRefactor = runMonacoRefactor;
+
+      syncFallbackCode(PRESETS.stripe.original, PRESETS.stripe.modified);
 
       function copyRefactoredCode() {
         if (!diffEditor) return;
