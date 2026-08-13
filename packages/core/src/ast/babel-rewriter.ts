@@ -26,16 +26,22 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
     };
   }
 
+  // Normalize code string if literal \n or \r\n escape sequences are received
+  let normalizedCode = code;
+  if (typeof normalizedCode === 'string' && normalizedCode.includes('\\n') && !normalizedCode.includes('\n')) {
+    normalizedCode = normalizedCode.replaceAll('\\n', '\n').replaceAll('\\r', '\r').replaceAll('\\t', '\t');
+  }
+
   // Determine if code is TS / JSX
   const isTS = filename.endsWith('.ts') || filename.endsWith('.tsx');
-  const isJSX = filename.endsWith('.jsx') || filename.endsWith('.tsx') || code.includes('<');
+  const isJSX = filename.endsWith('.jsx') || filename.endsWith('.tsx') || normalizedCode.includes('<');
 
   const plugins: ParserPlugin[] = ['decorators-legacy'];
 
   if (isTS) plugins.push('typescript');
   if (isJSX) plugins.push('jsx');
 
-  const ast = parse(code, {
+  const ast = parse(normalizedCode, {
     sourceType: 'module',
     plugins,
     allowReturnOutsideFunction: true,
