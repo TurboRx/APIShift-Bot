@@ -1,11 +1,4 @@
-/**
- * APIShift Web Dashboard & Interactive Workbench
- * Premium, ultra-responsive dark mode UI with Monaco Diff Editor, Interactive Schema Differ, Fleet Manager, Spec Watcher, and Webhook Queue Monitor.
- * Fully optimized for touch devices, mobile viewports, and desktop workstations.
- */
-
-export function renderDashboardHTML(): string {
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -537,24 +530,24 @@ export function renderDashboardHTML(): string {
           newRule: 'payment_method',
           renames: [{ oldName: 'card', newName: 'payment_method' }],
           endpointUpdates: [{ oldPath: '/v1/charges', newPath: '/v1/payment_intents', oldFunctionName: 'charges', newFunctionName: 'paymentIntents' }],
-          original: "import stripe from 'stripe';\\n\\ninterface ChargeParams {\\n  amount: number;\\n  card: string;\\n}\\n\\nexport async function processPayment(card: string) {\\n  const result = await stripe.charges.create({\\n    amount: 5000,\\n    card,\\n  });\\n  const endpoint = '/v1/charges/' + result.id;\\n  return fetch(endpoint);\\n}",
-          modified: "import stripe from 'stripe';\\n\\ninterface ChargeParams {\\n  amount: number;\\n  payment_method: string;\\n}\\n\\nexport async function processPayment(card: string) {\\n  const result = await stripe.paymentIntents.create({\\n    amount: 5000,\\n    payment_method: card\\n  });\\n  const endpoint = '/v1/payment_intents/' + result.id;\\n  return fetch(endpoint);\\n}"
+          original: "import stripe from 'stripe';\n\ninterface ChargeParams {\n  amount: number;\n  card: string;\n}\n\nexport async function processPayment(card: string) {\n  const result = await stripe.charges.create({\n    amount: 5000,\n    card,\n  });\n  const endpoint = '/v1/charges/' + result.id;\n  return fetch(endpoint);\n}",
+          modified: "import stripe from 'stripe';\n\ninterface ChargeParams {\n  amount: number;\n  payment_method: string;\n}\n\nexport async function processPayment(card: string) {\n  const result = await stripe.paymentIntents.create({\n    amount: 5000,\n    payment_method: card\n  });\n  const endpoint = '/v1/payment_intents/' + result.id;\n  return fetch(endpoint);\n}"
         },
         openai: {
           oldRule: 'prompt',
           newRule: 'messages',
           renames: [{ oldName: 'prompt', newName: 'messages' }],
           endpointUpdates: [{ oldPath: 'v1/completions', newPath: 'v1/chat/completions', oldFunctionName: 'completions', newFunctionName: 'chat.completions' }],
-          original: "import { OpenAI } from 'openai';\\n\\nconst client = new OpenAI();\\n\\nexport async function generateText(prompt: string) {\\n  const response = await client.completions.create({\\n    model: 'gpt-4o',\\n    prompt: prompt,\\n  });\\n  return response.choices[0].text;\\n}",
-          modified: "import { OpenAI } from 'openai';\\n\\nconst client = new OpenAI();\\n\\nexport async function generateText(prompt: string) {\\n  const response = await client.chat.completions.create({\\n    model: 'gpt-4o',\\n    messages: prompt,\\n  });\\n  return response.choices[0].text;\\n}"
+          original: "import { OpenAI } from 'openai';\n\nconst client = new OpenAI();\n\nexport async function generateText(prompt: string) {\n  const response = await client.completions.create({\n    model: 'gpt-4o',\n    prompt: prompt,\n  });\n  return response.choices[0].text;\n}",
+          modified: "import { OpenAI } from 'openai';\n\nconst client = new OpenAI();\n\nexport async function generateText(prompt: string) {\n  const response = await client.chat.completions.create({\n    model: 'gpt-4o',\n    messages: prompt,\n  });\n  return response.choices[0].text;\n}"
         },
         resend: {
           oldRule: 'to',
           newRule: 'recipients',
           renames: [{ oldName: 'to', newName: 'recipients' }],
           endpointUpdates: [{ oldPath: '/emails', newPath: '/v2/emails', oldFunctionName: 'sendEmail', newFunctionName: 'emails.send' }],
-          original: "import { Resend } from 'resend';\\n\\nconst resend = new Resend('re_123456');\\n\\nexport async function sendWelcome(to: string) {\\n  return await resend.sendEmail({\\n    to: to,\\n    subject: 'Welcome to APIShift',\\n    html: '<p>Hello world</p>'\\n  });\\n}",
-          modified: "import { Resend } from 'resend';\\n\\nconst resend = new Resend('re_123456');\\n\\nexport async function sendWelcome(to: string) {\\n  return await resend.emails.send({\\n    recipients: to,\\n    subject: 'Welcome to APIShift',\\n    html: '<p>Hello world</p>'\\n  });\\n}"
+          original: "import { Resend } from 'resend';\n\nconst resend = new Resend('re_123456');\n\nexport async function sendWelcome(to: string) {\n  return await resend.sendEmail({\n    to: to,\n    subject: 'Welcome to APIShift',\n    html: '<p>Hello world</p>'\n  });\n}",
+          modified: "import { Resend } from 'resend';\n\nconst resend = new Resend('re_123456');\n\nexport async function sendWelcome(to: string) {\n  return await resend.emails.send({\n    recipients: to,\n    subject: 'Welcome to APIShift',\n    html: '<p>Hello world</p>'\n  });\n}"
         }
       };
 
@@ -686,10 +679,10 @@ export function renderDashboardHTML(): string {
 
       window.loadPreset = loadPreset;
 
-      async function safeFetchJson(url: string, options?: RequestInit) {
+      async function safeFetchJson(url, options) {
         const res = await fetch(url, options);
         const text = await res.text();
-        let data: any;
+        let data;
         try {
           data = text && text.trim() ? JSON.parse(text) : {};
         } catch {
@@ -741,7 +734,7 @@ export function renderDashboardHTML(): string {
           } else {
             if (metricsStatus) metricsStatus.innerText = 'Code processed (' + duration + ' ms)';
           }
-        } catch (err: any) {
+        } catch (err) {
           if (metricsStatus) metricsStatus.innerText = 'Error processing AST: ' + (err.message || err);
         }
       }
@@ -766,8 +759,8 @@ export function renderDashboardHTML(): string {
       window.copyRefactoredCode = copyRefactoredCode;
 
       async function runSchemaDiff() {
-        const oldVal = (document.getElementById('spec-old') as HTMLTextAreaElement)?.value || '';
-        const newVal = (document.getElementById('spec-new') as HTMLTextAreaElement)?.value || '';
+        const oldVal = document.getElementById('spec-old')?.value || '';
+        const newVal = document.getElementById('spec-new')?.value || '';
         const resultBox = document.getElementById('differ-result');
 
         if (resultBox) resultBox.innerText = 'Analyzing OpenAPI schemas via /api/diff...';
@@ -781,7 +774,7 @@ export function renderDashboardHTML(): string {
             body: JSON.stringify({ oldSpec, newSpec })
           });
           if (resultBox) resultBox.innerText = JSON.stringify(result, null, 2);
-        } catch (err: any) {
+        } catch (err) {
           if (resultBox) resultBox.innerText = 'Error processing spec diff: ' + (err.message || err);
         }
       }
@@ -796,7 +789,7 @@ export function renderDashboardHTML(): string {
           if (data.results && data.results.length > 0) {
             const body = document.getElementById('spec-table-body');
             if (body) {
-              body.innerHTML = data.results.map(function(r: any) {
+              body.innerHTML = data.results.map(function(r) {
                 return '<tr>' +
                   '<td><strong>' + r.vendorId.toUpperCase() + ' API</strong></td>' +
                   '<td><span class="badge-status badge-success">Active Sync</span></td>' +
@@ -816,9 +809,9 @@ export function renderDashboardHTML(): string {
 
       window.checkSpecWatcher = checkSpecWatcher;
 
-      async function dispatchFleetMigration(e: any) {
+      async function dispatchFleetMigration(e) {
         if (e && e.preventDefault) e.preventDefault();
-        const input = document.getElementById('fleet-repo-input') as HTMLInputElement;
+        const input = document.getElementById('fleet-repo-input');
         const repo = input ? input.value.trim() : '';
         if (!repo) return;
 
@@ -842,7 +835,7 @@ export function renderDashboardHTML(): string {
             tableBody.insertBefore(newRow, tableBody.firstChild);
           }
           if (input) input.value = '';
-        } catch (err: any) {
+        } catch (err) {
           alert('Error dispatching fleet PR: ' + (err.message || err));
         }
       }
@@ -866,7 +859,7 @@ export function renderDashboardHTML(): string {
           if (data.recentJobs && data.recentJobs.length > 0) {
             const body = document.getElementById('queue-table-body');
             if (body) {
-              body.innerHTML = data.recentJobs.slice(-5).reverse().map(function(j: any) {
+              body.innerHTML = data.recentJobs.slice(-5).reverse().map(function(j) {
                 const badgeClass = j.status === 'completed' ? 'badge-success' : 'badge-pending';
                 return '<tr>' +
                   '<td><code>' + j.id + '</code></td>' +
@@ -903,5 +896,4 @@ export function renderDashboardHTML(): string {
     })();
   </script>
 </body>
-</html>`;
-}
+</html>
