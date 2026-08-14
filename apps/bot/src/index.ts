@@ -8,9 +8,12 @@ export interface Env {
   WEBHOOK_SECRET?: string;
   GITHUB_TOKEN?: string;
   DEFAULT_BRANCH?: string;
+  APP_ID?: string;
+  APP_PRIVATE_KEY?: string;
 }
 
 import { cors } from 'hono/cors';
+import { getAuthenticatedOctokit } from './github/auth.js';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -94,37 +97,14 @@ app.post('/api/queue/enqueue', async (c) => {
 
 // Fleet Batch Refactor API
 app.post('/api/fleet/migrate', async (c) => {
-  const githubToken = c.env.GITHUB_TOKEN;
   const body = await c.req.json();
-
-  if (!githubToken) {
-    // Return simulated fleet response when token is not configured
-    const repo = body.repository || 'org/custom-service';
-    return c.json({
-      status: 'success',
-      simulated: true,
-      result: {
-        totalRepositories: 1,
-        successfulMigrations: 1,
-        failedMigrations: 0,
-        results: [
-          {
-            repo,
-            status: 'created',
-            prUrl: `https://github.com/${repo}/pull/${Math.floor(Math.random() * 50) + 1}`,
-            branch: 'apishift/auto-refactor-v2',
-          },
-        ],
-      },
-    });
-  }
+  const repoStr = body.repository || 'TurboRx/APIShift-Bot';
+  const parts = repoStr.split('/');
+  const owner = parts[0] || 'TurboRx';
+  const repo = parts[1] || 'APIShift-Bot';
 
   try {
-    const octokit = new Octokit({ auth: githubToken });
-    const repoStr = body.repository || 'TurboRx/APIShift-Bot';
-    const parts = repoStr.split('/');
-    const owner = parts[0] || 'TurboRx';
-    const repo = parts[1] || 'APIShift-Bot';
+    const octokit = await getAuthenticatedOctokit(c.env, owner, repo);
 
     const fleetJob = {
       jobId: 'fleet-' + Date.now(),
@@ -197,11 +177,14 @@ app.post('/api/webhook', async (c) => {
     const repo = repository.name as string;
     const baseBranch = (repository.default_branch || c.env.DEFAULT_BRANCH || 'main') as string;
 
-    const githubToken = c.env.GITHUB_TOKEN;
-    if (!githubToken) {
+    let octokit: Octokit;
+    try {
+      octokit = await getAuthenticatedOctokit(c.env, owner, repo);
+    } catch (authErr) {
       return c.json(
         {
-          message: 'Webhook received but GITHUB_TOKEN secret is missing. Skipping PR creation.',
+          message: 'Webhook received but GitHub App / Token credentials missing or invalid.',
+          error: String(authErr),
           event,
           owner,
           repo,
@@ -209,8 +192,6 @@ app.post('/api/webhook', async (c) => {
         202
       );
     }
-
-    const octokit = new Octokit({ auth: githubToken });
 
     const clientPayload = payload.client_payload as Record<string, unknown> | undefined;
 

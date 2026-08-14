@@ -10,3 +10,5 @@ DEFAULT_BRANCH = "main"
 # Note: Environment secrets must be configured via wrangler secret:
 # - WEBHOOK_SECRET
 # - GITHUB_TOKEN
+# - APP_ID
+# - APP_PRIVATE_KEY
