@@ -1,15 +1,13 @@
 import stripe from 'stripe';
-
 interface ChargeParams {
   amount: number;
-  card: string;
+  payment_method: string;
 }
-
 export async function processPayment(card: string) {
-  const result = await stripe.charges.create({
+  const result = await stripe.paymentIntents.create({
     amount: 5000,
-    card,
+    payment_method: card
   });
-  const endpoint = '/v1/charges/' + result.id;
+  const endpoint = "/v1/payment_intents/" + result.id;
   return fetch(endpoint);
 }
