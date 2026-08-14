@@ -24,11 +24,31 @@ export interface QueueStats {
  */
 export class WebhookQueueManager {
   private jobs: Map<string, QueueJob> = new Map();
+  private maxCapacity = 200;
 
   /**
    * Enqueues a new incoming webhook job
    */
   public enqueueJob(event: string, payload: Record<string, unknown>, maxAttempts = 3): QueueJob {
+    // Prune oldest finished jobs if approaching capacity limit
+    if (this.jobs.size >= this.maxCapacity) {
+      const keysToDelete: string[] = [];
+      for (const [id, j] of this.jobs.entries()) {
+        if (j.status === 'completed' || j.status === 'dead_letter') {
+          keysToDelete.push(id);
+          if (this.jobs.size - keysToDelete.length < this.maxCapacity * 0.8) break;
+        }
+      }
+      for (const k of keysToDelete) {
+        this.jobs.delete(k);
+      }
+      // If still above capacity, remove oldest entries
+      if (this.jobs.size >= this.maxCapacity) {
+        const oldestKey = this.jobs.keys().next().value;
+        if (oldestKey) this.jobs.delete(oldestKey);
+      }
+    }
+
     const id = `job_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
     const now = new Date().toISOString();
 

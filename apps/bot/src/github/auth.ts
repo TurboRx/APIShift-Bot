@@ -11,13 +11,22 @@ function base64url(buf: Buffer | string): string {
   return (typeof buf === 'string' ? Buffer.from(buf) : buf).toString('base64url');
 }
 
+export function normalizePrivateKey(key: string): string {
+  let normalized = key.trim().replace(/^["']|["']$/g, '');
+  if (normalized.includes('\\n') && !normalized.includes('\n')) {
+    normalized = normalized.replace(/\\n/g, '\n');
+  }
+  return normalized.replace(/\r\n/g, '\n');
+}
+
 export function generateAppJWT(appId: string, privateKey: string): string {
+  const normalizedKey = normalizePrivateKey(privateKey);
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const payload = base64url(JSON.stringify({ iat: now - 60, exp: now + 600, iss: appId }));
   const signer = crypto.createSign('RSA-SHA256');
   signer.update(`${header}.${payload}`);
-  const sig = signer.sign(privateKey);
+  const sig = signer.sign(normalizedKey);
   return `${header}.${payload}.${base64url(sig)}`;
 }
 

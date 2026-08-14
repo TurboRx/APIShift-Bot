@@ -100,10 +100,20 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
         if (epRule.oldFunctionName && epRule.newFunctionName) {
           if (t.isIdentifier(node.property) && node.property.name === epRule.oldFunctionName) {
             if (epRule.newFunctionName.includes('.')) {
-              const parts = epRule.newFunctionName.split('.');
-              if (parts.length === 2 && parts[0] && parts[1]) {
-                node.object = t.memberExpression(node.object, t.identifier(parts[0]));
-                node.property = t.identifier(parts[1]);
+              const parts = epRule.newFunctionName.split('.').filter(Boolean);
+              if (parts.length >= 2) {
+                let currentObj = node.object;
+                for (let i = 0; i < parts.length - 1; i++) {
+                  const part = parts[i];
+                  if (part) {
+                    currentObj = t.memberExpression(currentObj, t.identifier(part));
+                  }
+                }
+                node.object = currentObj;
+                const lastPart = parts[parts.length - 1];
+                if (lastPart) {
+                  node.property = t.identifier(lastPart);
+                }
               }
             } else {
               node.property.name = epRule.newFunctionName;
@@ -126,12 +136,16 @@ export function rewriteAST(code: string, options: ASTTransformOptions = {}): AST
         if (epRule.oldFunctionName && epRule.newFunctionName) {
           if (t.isIdentifier(callee) && callee.name === epRule.oldFunctionName) {
             if (epRule.newFunctionName.includes('.')) {
-              const parts = epRule.newFunctionName.split('.');
-              if (parts.length === 2 && parts[0] && parts[1]) {
-                path.node.callee = t.memberExpression(
-                  t.identifier(parts[0]),
-                  t.identifier(parts[1])
-                );
+              const parts = epRule.newFunctionName.split('.').filter(Boolean);
+              if (parts.length >= 2 && parts[0]) {
+                let expr: t.Expression = t.identifier(parts[0]);
+                for (let i = 1; i < parts.length; i++) {
+                  const part = parts[i];
+                  if (part) {
+                    expr = t.memberExpression(expr, t.identifier(part));
+                  }
+                }
+                path.node.callee = expr;
               }
             } else {
               callee.name = epRule.newFunctionName;

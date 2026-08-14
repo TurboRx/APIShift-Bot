@@ -186,4 +186,53 @@ async function sendWelcome(to: string) {
     expect(result.code).toContain('resend.emails.send');
     expect(result.code).toContain('recipients: to');
   });
+
+  it('handles multi-level nested dot-notation namespace renames (e.g. completions -> v2.chat.completions)', () => {
+    const inputCode = `
+const resp = await client.completions.create({ prompt: 'hello' });
+`;
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'prompt', newName: 'messages' }],
+      endpointUpdates: [
+        {
+          oldPath: '/completions',
+          newPath: '/chat/completions',
+          oldFunctionName: 'completions',
+          newFunctionName: 'v2.chat.completions',
+        },
+      ],
+      filename: 'ai.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('client.v2.chat.completions.create');
+    expect(result.code).toContain('messages: \'hello\'');
+  });
+
+  it('transforms destructuring patterns while maintaining variable references', () => {
+    const inputCode = `
+const { card } = request.body;
+function handlePayment({ card }: { card: string }) {
+  console.log(card);
+}
+`;
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'card', newName: 'payment_method' }],
+      filename: 'destruct.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('payment_method: card');
+  });
+
+  it('normalizes literal \\n escapes without throwing syntax errors', () => {
+    const inputCode = "import stripe from 'stripe';\\ninterface Params {\\n  card: string;\\n}\\n";
+    const result = rewriteAST(inputCode, {
+      renames: [{ oldName: 'card', newName: 'payment_method' }],
+      filename: 'escaped.ts',
+    });
+
+    expect(result.hasChanges).toBe(true);
+    expect(result.code).toContain('payment_method: string;');
+  });
 });

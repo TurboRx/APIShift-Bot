@@ -106,8 +106,17 @@ export async function createRefactoringPR(
     }
   }
 
-  // If no files modified, skip PR creation
+  // If no files modified, clean up the created branch and skip PR creation
   if (filesModified.length === 0) {
+    try {
+      await octokit.git.deleteRef({
+        owner,
+        repo,
+        ref: `heads/${branchName}`,
+      });
+    } catch {
+      // Ignore cleanup error if branch ref was not yet propagated or already removed
+    }
     return null;
   }
 
